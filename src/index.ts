@@ -8,6 +8,7 @@ import { MarketSource } from "./market/dataSource.js";
 import { createLedger } from "./ledger/createLedger.js";
 import { mirror } from "./ledger/chainMirror.js";
 import { runCycle, type Sell, type SaleReceipt } from "./controller/loop.js";
+import { quickSignal } from "./research/research.js";
 import { config } from "./shared/config.js";
 import { toUsdc } from "./shared/money.js";
 import type { LoopCycle, Signal, LedgerEntry, MarketSnapshot } from "./shared/types.js";
@@ -21,9 +22,14 @@ const agent = config.agentPrivateKey
   ? privateKeyToAccount(config.agentPrivateKey as `0x${string}`)
   : privateKeyToAccount(generatePrivateKey());
 
-const latest: { signal: Signal | null; snapshot: MarketSnapshot | null } = {
+const latest: {
+  signal: Signal | null;
+  snapshot: MarketSnapshot | null;
+  byAsset: Record<string, { signal: Signal; snapshot: MarketSnapshot }>;
+} = {
   signal: null,
   snapshot: null,
+  byAsset: {},
 };
 const market = new MarketSource();
 const treasury = new Treasury(config.seedMicro);
@@ -129,6 +135,19 @@ async function tick() {
   try {
     const cyc = await runCycle({ treasury, market, ledger, sell, ts: Date.now(), latest });
     cycles.push(cyc);
+
+    // Refresh the non primary assets for the seller, cheap deterministic signals, no LLM.
+    // The primary asset is produced by the loop above. The cached snapshot is reused.
+    try {
+      const all = await market.snapshotsAll(Date.now());
+      for (const sym of config.assets) {
+        if (sym === config.asset) continue;
+        const snap = all[sym];
+        if (snap) latest.byAsset[sym] = { signal: quickSignal(snap), snapshot: snap };
+      }
+    } catch (e) {
+      console.warn("asset refresh skipped:", (e as Error).message);
+    }
     console.log(
       `[${cyc.action}] balance ${toUsdc(BigInt(cyc.balanceAfter))} USDC` +
         `  earned ${toUsdc(BigInt(treasury.earned))}  spent ${toUsdc(BigInt(treasury.spent))}` +

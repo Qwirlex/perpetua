@@ -13,17 +13,29 @@ import type { Signal, MarketSnapshot } from "../shared/types.js";
 // the income lands at the seller wallet. Discovery metadata lets the Bazaar index and
 // rank the listing after the first settled payment.
 
+export interface AssetState {
+  signal: Signal;
+  snapshot: MarketSnapshot;
+}
+
 export interface LatestState {
   signal: Signal | null;
   snapshot: MarketSnapshot | null;
+  byAsset: Record<string, AssetState>;
 }
 
-const TAGS = ["crypto", "risk", "signals", "market-data", "trading", "ethereum"];
+const TAGS = ["crypto", "risk", "signals", "market-data", "trading", "ethereum", "bitcoin", "solana"];
 
-// Optional asset query param, currently ETH. Gives agents an input schema to read.
+// Optional asset query param. Gives agents an input schema to read, the enum lists the
+// assets we cover.
 const INPUT_SCHEMA = {
   properties: {
-    asset: { type: "string", enum: ["ETH"], description: "Asset symbol, currently ETH" },
+    asset: {
+      type: "string",
+      enum: config.assets,
+      default: config.asset,
+      description: `Asset symbol, one of ${config.assets.join(", ")}`,
+    },
   },
 };
 
@@ -141,22 +153,39 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     ),
   );
 
+  // Resolve the requested asset, default the primary. Returns null if not covered.
+  function pick(req: express.Request): AssetState | null | "unsupported" {
+    const raw = (req.query.asset as string | undefined)?.toUpperCase() || config.asset;
+    if (!config.assets.includes(raw)) return "unsupported";
+    return latest.byAsset[raw] ?? null;
+  }
+
   // Paid, the basic signal.
   app.get("/signal", (_req, res) => {
-    if (!latest.signal) {
+    const a = pick(_req);
+    if (a === "unsupported") {
+      res.status(400).json({ error: `asset not covered, supported ${config.assets.join(", ")}` });
+      return;
+    }
+    if (!a) {
       res.status(404).json({ error: "no signal yet" });
       return;
     }
-    res.json(latest.signal);
+    res.json(a.signal);
   });
 
   // Paid, the enriched report, computed on demand.
   app.get("/report", async (_req, res) => {
-    if (!latest.signal || !latest.snapshot) {
+    const a = pick(_req);
+    if (a === "unsupported") {
+      res.status(400).json({ error: `asset not covered, supported ${config.assets.join(", ")}` });
+      return;
+    }
+    if (!a) {
       res.status(404).json({ error: "no signal yet" });
       return;
     }
-    res.json(await buildReport(latest.signal, latest.snapshot));
+    res.json(await buildReport(a.signal, a.snapshot));
   });
 
   // USDC contract per network, used in the discovery document.
@@ -211,8 +240,8 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           name: "asset",
           in: "query",
           required: false,
-          description: "Asset symbol, currently ETH",
-          schema: { type: "string", enum: ["ETH"], default: "ETH" },
+          description: `Asset symbol, one of ${config.assets.join(", ")}`,
+          schema: { type: "string", enum: config.assets, default: config.asset },
         },
       ],
       responses: {

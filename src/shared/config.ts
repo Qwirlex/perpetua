@@ -18,6 +18,12 @@ export const config = {
   marketPort: n(process.env.MARKET_PORT, 4021),
   apiPort: n(process.env.API_PORT, 4022),
   asset: process.env.ASSET ?? "ETH",
+  // Assets the agent tracks and sells signals for. The first is the primary, it drives
+  // the self funding demo chart. The rest broaden coverage so more agent queries match.
+  assets: (process.env.ASSETS ?? "ETH,BTC,SOL")
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean),
 
   mongoUri: process.env.MONGODB_URI ?? "",
   mongoDb: process.env.MONGODB_DB ?? "perpetua",

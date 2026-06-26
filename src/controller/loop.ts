@@ -21,7 +21,11 @@ export interface CycleDeps {
   ledger: Ledger;
   sell: Sell;
   ts: number;
-  latest?: { signal: Signal | null; snapshot?: import("../shared/types.js").MarketSnapshot | null };
+  latest?: {
+    signal: Signal | null;
+    snapshot?: import("../shared/types.js").MarketSnapshot | null;
+    byAsset?: Record<string, { signal: Signal; snapshot: import("../shared/types.js").MarketSnapshot }>;
+  };
 }
 
 let n = 0;
@@ -64,6 +68,7 @@ export async function runCycle(deps: CycleDeps): Promise<LoopCycle> {
     if (deps.latest) {
       deps.latest.signal = signal;
       deps.latest.snapshot = snap;
+      if (deps.latest.byAsset) deps.latest.byAsset[signal.asset] = { signal, snapshot: snap };
     }
   }
 
