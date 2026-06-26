@@ -1,5 +1,7 @@
 # Perpetua
 
+**Live demo: https://tradeperpetua.xyz** — running 24/7, settling real USDC on Base Sepolia.
+
 **A self funding autonomous research agent.** It studies crypto and on chain signals,
 sells each one over a real x402 payment handshake, and reinvests the income into the
 next round of research. No human pays its bills. The balance sustains itself.
