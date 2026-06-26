@@ -5,3 +5,5 @@ dist/
 test-ledger.local.json
 perpetua-ledger.local.json
 .DS_Store
+
+run.log
