@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/express": "^4",
     "@types/node": "^20",
+    "solc": "^0.8.35",
     "tsx": "^4",
     "typescript": "^5",
     "vitest": "^2"
