@@ -106,6 +106,12 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; }
 .row .mono { color: var(--muted); font-size: 11px; font-family: ui-monospace, monospace; }
 .row .txlink { color: var(--accent); text-decoration: none; }
 .row .txlink:hover { text-decoration: underline; }
+.panel.income { border-color: #1c3b2a; }
+.income-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+.income-row .label { color: var(--muted); font-size: 13px; }
+.income-row .big { font-size: 26px; font-weight: 700; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+.income-row .unit { color: var(--muted); font-size: 12px; }
+@media (max-width: 680px) { .income-row { grid-template-columns: 1fr; } }
 footer {
   text-align: center;
   color: var(--muted);

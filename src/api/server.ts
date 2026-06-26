@@ -4,14 +4,20 @@ import { fileURLToPath } from "node:url";
 import type { Treasury } from "../treasury/treasury.js";
 import type { Ledger } from "../ledger/ledger.js";
 import type { LoopCycle } from "../shared/types.js";
+import type { IncomeTracker } from "../income/income.js";
 import { config } from "../shared/config.js";
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 
 // The dashboard data API. Treasury state plus a balance series, the loop cycle log,
-// and the ledger history. Also serves the static dashboard.
-export function createApiApp(treasury: Treasury, ledger: Ledger, cycles: LoopCycle[]) {
+// the ledger history, and the real on chain income. Also serves the static dashboard.
+export function createApiApp(treasury: Treasury, ledger: Ledger, cycles: LoopCycle[], income?: IncomeTracker) {
   const app = express();
+
+  // Real income earned at the seller wallet on Base mainnet from outside buyers.
+  app.get("/income", (_req, res) => {
+    res.json(income ? income.state() : { totalMicro: "0", count: 0, balanceMicro: "0", recent: [] });
+  });
 
   app.get("/state", (_req, res) => {
     res.json({

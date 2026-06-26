@@ -150,8 +150,41 @@ async function refreshLedger() {
   }
 }
 
+async function refreshIncome() {
+  try {
+    const i = await (await fetch(`${API}/income`)).json();
+    $("inc-total").textContent = usdc(i.totalMicro || "0");
+    $("inc-balance").textContent = usdc(i.balanceMicro || "0");
+    $("inc-count").textContent = String(i.count || 0);
+    const box = $("inc-recent");
+    box.textContent = "";
+    (i.recent || []).forEach((s) => {
+      const row = el("div", "row");
+      const left = el("div");
+      left.appendChild(el("div", undefined, `Paid call from ${(s.from || "").slice(0, 6)}…`));
+      const meta = el("div", "mono");
+      if (isTxHash(s.tx)) {
+        const a = el("a", "txlink", "on chain ↗");
+        a.href = "https://basescan.org/tx/" + s.tx;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        meta.appendChild(a);
+      } else {
+        meta.appendChild(document.createTextNode(s.tx || ""));
+      }
+      left.appendChild(meta);
+      row.appendChild(left);
+      row.appendChild(el("div", "amt up", "+" + usdc(s.amount || "0")));
+      box.appendChild(row);
+    });
+  } catch (e) {
+    console.warn("income", e);
+  }
+}
+
 function tick() {
   refreshState();
+  refreshIncome();
   refreshFeed();
   refreshLedger();
 }

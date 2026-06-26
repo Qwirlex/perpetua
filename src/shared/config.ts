@@ -64,6 +64,8 @@ export const config = {
   sellerPort: n(process.env.SELLER_PORT, 4055),
   sellerPublicUrl: process.env.SELLER_PUBLIC_URL ?? "https://api.tradeperpetua.xyz",
   contactEmail: process.env.CONTACT_EMAIL ?? "",
+  // Block to start scanning seller income from, near the mainnet launch, keeps the scan cheap.
+  incomeStartBlock: process.env.INCOME_START_BLOCK ?? "47850000",
   coingeckoUrl:
     process.env.COINGECKO_URL ??
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum",

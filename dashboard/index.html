@@ -42,6 +42,28 @@
         </div>
       </section>
 
+      <section class="panel income">
+        <h2>Real income, USDC paid by outside buyers on Base mainnet</h2>
+        <div class="income-row">
+          <div>
+            <div class="label">Earned, all time</div>
+            <div class="big up" id="inc-total">0.000000</div>
+            <div class="unit">USDC received on chain</div>
+          </div>
+          <div>
+            <div class="label">Wallet balance</div>
+            <div class="big" id="inc-balance">0.000000</div>
+            <div class="unit">USDC held now</div>
+          </div>
+          <div>
+            <div class="label">Paid calls</div>
+            <div class="big" id="inc-count">0</div>
+            <div class="unit">real settled sales</div>
+          </div>
+        </div>
+        <div id="inc-recent" class="ledger"></div>
+      </section>
+
       <section class="panel">
         <h2>Balance over time, no human top up</h2>
         <canvas id="chart" height="120"></canvas>
@@ -60,9 +82,10 @@
     </main>
 
     <footer>
-      Perpetua, a self funding autonomous research agent. Every signal sale settles as a real
-      transferWithAuthorization on Base Sepolia, the on chain links above are real transactions.
-      Mainnet, with Circle USDC, is a one line config change.
+      Perpetua, a self funding autonomous research agent. The income section is real USDC paid by
+      outside agents on Base mainnet, settled over the x402 protocol. The balance chart below is the
+      self funding loop running live. Buy the signals at
+      <a href="https://api.tradeperpetua.xyz/docs">api.tradeperpetua.xyz/docs</a>.
     </footer>
 
     <script src="app.js"></script>

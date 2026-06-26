@@ -9,6 +9,7 @@ import { createLedger } from "./ledger/createLedger.js";
 import { mirror } from "./ledger/chainMirror.js";
 import { runCycle, type Sell, type SaleReceipt } from "./controller/loop.js";
 import { quickSignal } from "./research/research.js";
+import { IncomeTracker } from "./income/income.js";
 import { config } from "./shared/config.js";
 import { toUsdc } from "./shared/money.js";
 import type { LoopCycle, Signal, LedgerEntry, MarketSnapshot } from "./shared/types.js";
@@ -109,7 +110,12 @@ if (prior.length === 0) {
   );
 }
 
-const apiApp = createApiApp(treasury, ledger, cycles);
+// Real income tracker, scans the seller wallet for USDC received from outside buyers.
+const income = new IncomeTracker();
+income.refresh();
+setInterval(() => income.refresh(), 30_000);
+
+const apiApp = createApiApp(treasury, ledger, cycles, income);
 apiApp.listen(config.apiPort, () =>
   console.log(`dashboard http://127.0.0.1:${config.apiPort}`),
 );
