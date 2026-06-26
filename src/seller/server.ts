@@ -106,6 +106,9 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
   }
 
   const app = express();
+  // Behind Caddy, trust the proxy so the request protocol is https. This makes the
+  // resource url in the 402 and in facilitator discovery listings https, not http.
+  app.set("trust proxy", true);
 
   app.use(
     paymentMiddleware(
