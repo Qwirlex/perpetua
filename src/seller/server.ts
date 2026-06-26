@@ -200,6 +200,47 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
   app.get("/.well-known/x402", (_req, res) => res.json(discovery));
   app.get("/discovery", (_req, res) => res.json(discovery));
 
+  // OpenAPI spec. x402scan reads this to learn the input schema and the 402 payment
+  // info, which is how it registers a resource. Facilitator independent.
+  function operation(price: string, summary: string, outSchema: Record<string, unknown>) {
+    return {
+      operationId: summary.replace(/\s+/g, "_").toLowerCase(),
+      summary,
+      parameters: [
+        {
+          name: "asset",
+          in: "query",
+          required: false,
+          description: "Asset symbol, currently ETH",
+          schema: { type: "string", enum: ["ETH"], default: "ETH" },
+        },
+      ],
+      responses: {
+        "200": { description: summary, content: { "application/json": { schema: outSchema } } },
+        "402": { description: "Payment required, pay per call in USDC over x402" },
+      },
+      "x-x402": {
+        accepts: [
+          { scheme: "exact", network, maxAmountRequired: priceToAmount(price), asset: usdc, payTo, extra: { name: "USD Coin", version: "2" } },
+        ],
+      },
+    };
+  }
+  const openapi = {
+    openapi: "3.1.0",
+    info: {
+      title: "Perpetua crypto intelligence",
+      version: "1.0.0",
+      description: "An AI agent that sells crypto risk signals over x402. Pay per call in USDC on Base.",
+    },
+    servers: [{ url: base }],
+    paths: {
+      "/signal": { get: operation(config.basicPrice, "Crypto risk signal", SIGNAL_OUTPUT.schema) },
+      "/report": { get: operation(config.reportPrice, "Enriched crypto risk report", REPORT_OUTPUT.schema) },
+    },
+  };
+  app.get("/openapi.json", (_req, res) => res.json(openapi));
+
   // Free, a plain catalog so a human or an agent can see what is sold and the price.
   app.get("/", (_req, res) => {
     res.json({
