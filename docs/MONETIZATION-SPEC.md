@@ -159,15 +159,21 @@ identity.
 6. Money and tax. Real USDC income is yours and your responsibility, wallet custody,
    conversion, and any tax. Not something I handle.
 
-## Open decisions for you
+## Decisions locked 2026-06-26
 
-- Go straight to Base mainnet, recommended since real money needs it, or run one more
-  pass on Base Sepolia first. I recommend mainnet, the amounts are tiny and settlement is
-  fee free.
-- Which wallet receives the USDC, a fresh dedicated one, recommended, or an existing one.
-- Pricing, accept 0.01 and 0.25 or change it.
-- How hard to push discovery, just auto list, or also invest in the x402scan listing and
-  a developer page, recommended yes since discovery is the real bottleneck.
+- Network, Base mainnet from the start. Real money needs it, amounts are tiny, settlement
+  is fee free via CDP.
+- Wallet, a fresh dedicated wallet receives the USDC, for clean accounting.
+- Pricing, start cheap to attract first buyers, then raise. Basic signal 0.005 USDC,
+  enriched report 0.05 USDC. Both are env configurable so we can tune without a redeploy.
+- Discovery, push it. Auto list via CDP plus a polished x402scan listing and a developer
+  page, since discovery is the real bottleneck.
+
+Packages confirmed and installed, the official v2 stack, @x402/express plus @x402/core,
+and @coinbase/x402 for the CDP facilitator config via createFacilitatorConfig(keyId,
+secret). The seller middleware is paymentMiddleware(routes, x402ResourceServer(client)),
+discovery metadata rides on the route output schema and is cataloged after the first
+settled payment.
 
 ## Sources
 

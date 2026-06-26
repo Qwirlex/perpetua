@@ -10,7 +10,10 @@
     "api": "tsx src/api/server.ts"
   },
   "dependencies": {
+    "@coinbase/x402": "^2.1.0",
     "@google/genai": "^2.10.0",
+    "@x402/core": "^2.16.0",
+    "@x402/express": "^2.16.0",
     "dotenv": "^16",
     "express": "^4",
     "mongodb": "^6",
