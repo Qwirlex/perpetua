@@ -2,7 +2,7 @@ import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
-import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
+import { declareDiscoveryExtension, bazaarResourceServerExtension, withBazaar } from "@x402/extensions/bazaar";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { config } from "../shared/config.js";
 import { buildReport } from "../research/report.js";
@@ -69,11 +69,12 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
       : { url: "https://x402.org/facilitator" };
 
   const network = config.sellerNetwork as `${string}:${string}`;
-  const facilitatorClient = new HTTPFacilitatorClient(facilitatorConfig);
-  const resourceServer = new x402ResourceServer(facilitatorClient).register(
-    network,
-    new ExactEvmScheme(),
-  );
+  // withBazaar adds the discovery client extension, registerExtension adds the server
+  // side one so the route discovery metadata is emitted in the 402 for x402scan.
+  const facilitatorClient = withBazaar(new HTTPFacilitatorClient(facilitatorConfig));
+  const resourceServer = new x402ResourceServer(facilitatorClient)
+    .register(network, new ExactEvmScheme())
+    .registerExtension(bazaarResourceServerExtension);
 
   // Fetch the facilitator's supported kinds before serving so the very first request
   // can build a 402 instead of racing the background sync. Retry a few times so a brief
