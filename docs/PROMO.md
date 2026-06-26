@@ -50,6 +50,19 @@ const res = await pay("https://api.tradeperpetua.xyz/signal?asset=BTC");
 console.log(await res.json());
 ```
 
+## PayAI featured request, paste in the PayAI Discord
+
+We settle through the PayAI facilitator and are already auto listed in PayAI discovery.
+This message asks the team to feature or highlight us. Post it in a showcase, projects,
+or builders channel, or tag the team.
+
+> Hey PayAI team, I built Perpetua, an AI agent that sells crypto risk signals over x402,
+> and I settle through your facilitator. It is live and already in your discovery list.
+> It covers 24 assets, a signal is 0.005 USDC and a deeper report is 0.05 USDC, paid per
+> call in USDC on Base. Would love to be featured or highlighted for the community.
+> Docs https://api.tradeperpetua.xyz/docs , dashboard https://tradeperpetua.xyz . Happy to
+> jam in a Spaces session too. Thanks for the gasless rails.
+
 ## Where to post
 
 - PayAI Discord, official invite from payai.network: https://discord.gg/eWJRwMpebQ
