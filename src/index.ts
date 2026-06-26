@@ -40,17 +40,48 @@ const marketUrl = `http://127.0.0.1:${config.marketPort}`;
 
 const ledger = await createLedger();
 
-// Record the seed, the only capital the agent ever receives from outside.
-const seedEntry: LedgerEntry = {
-  id: "l-seed",
-  ts: Date.now(),
-  kind: "seed",
-  amount: config.seedMicro.toString(),
-  balanceAfter: treasury.balance.toString(),
-  ref: "seed",
-};
-seedEntry.mirrorTx = await mirror(seedEntry);
-await ledger.record(seedEntry);
+// Continuity across restarts. The treasury lives in memory, so on a restart we
+// reconstruct it from the ledger, the durable record of every move of value. The seed
+// is recorded only on the very first boot, so a restart never injects fresh capital,
+// the self funding story stays honest across reboots.
+const prior = await ledger.history(1_000_000);
+if (prior.length === 0) {
+  const seedEntry: LedgerEntry = {
+    id: "l-seed",
+    ts: Date.now(),
+    kind: "seed",
+    amount: config.seedMicro.toString(),
+    balanceAfter: treasury.balance.toString(),
+    ref: "seed",
+  };
+  seedEntry.mirrorTx = await mirror(seedEntry);
+  await ledger.record(seedEntry);
+} else {
+  let earned = 0n;
+  let spent = 0n;
+  for (const e of prior) {
+    if (e.kind === "signal_sale") earned += BigInt(e.amount);
+    else if (e.kind === "research_spend") spent += BigInt(e.amount.replace("-", ""));
+  }
+  treasury.balance = BigInt(prior[prior.length - 1].balanceAfter);
+  treasury.earned = earned;
+  treasury.spent = spent;
+  // Seed the chart so it resumes at the real balance rather than from zero.
+  for (const e of prior.slice(-300)) {
+    cycles.push({
+      ts: e.ts,
+      action: "wait",
+      reason: "history",
+      sales: 0,
+      spent: "0",
+      earned: "0",
+      balanceAfter: e.balanceAfter,
+    });
+  }
+  console.log(
+    `restored from ledger, balance ${toUsdc(treasury.balance)} USDC, earned ${toUsdc(earned)}, spent ${toUsdc(spent)}, ${prior.length} entries`,
+  );
+}
 
 const apiApp = createApiApp(treasury, ledger, cycles);
 apiApp.listen(config.apiPort, () =>
