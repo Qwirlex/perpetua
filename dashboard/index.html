@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Perpetua, the self funding research agent</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="brand">PERPETUA</div>
+      <h1>An AI agent that funds its own research by selling what it learns.</h1>
+      <p class="sub">
+        It studies crypto and on chain signals, sells each one over x402, and reinvests the income
+        into the next round. No human pays its bills. The balance below stays alive on its own.
+      </p>
+      <div class="mode" id="mode">demo, local settlement</div>
+    </header>
+
+    <main>
+      <section class="cards">
+        <div class="card">
+          <div class="label">Treasury balance</div>
+          <div class="big" id="balance">0.000000</div>
+          <div class="unit">USDC</div>
+        </div>
+        <div class="card">
+          <div class="label">Total earned</div>
+          <div class="big up" id="earned">0.000000</div>
+          <div class="unit">from signal sales</div>
+        </div>
+        <div class="card">
+          <div class="label">Total spent</div>
+          <div class="big down" id="spent">0.000000</div>
+          <div class="unit">on research compute</div>
+        </div>
+        <div class="card">
+          <div class="label">Net, the runway</div>
+          <div class="big" id="net">0.000000</div>
+          <div class="unit">earned minus spent</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Balance over time, no human top up</h2>
+        <canvas id="chart" height="120"></canvas>
+      </section>
+
+      <div class="two-col">
+        <section class="panel">
+          <h2>Signal feed, the intelligence it sells</h2>
+          <div id="feed" class="feed"></div>
+        </section>
+        <section class="panel">
+          <h2>Ledger, every spend and sale</h2>
+          <div id="ledger" class="ledger"></div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      Perpetua, a self funding autonomous research agent. The x402 marketplace and the USDC rails are
+      real and live, this demo settles locally for safety, going live on Base is a config change.
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
