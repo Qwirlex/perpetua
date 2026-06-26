@@ -61,19 +61,28 @@ npm run typecheck
 
 Honest scope, this matters for the paper and the judging.
 
-| Piece | In the demo | Live |
-| --- | --- | --- |
-| x402 protocol, 402 challenge and X-PAYMENT handshake | real | real |
-| Buyer signatures, EIP-3009 TransferWithAuthorization | real, signed and verified with viem | real |
-| The signal, risk score, trend, anomaly | real computation over market data | real |
-| Ledger | local JSON file, or MongoDB Atlas if a URI is set | MongoDB Atlas |
-| On chain mirror | deterministic keccak reference | Base transaction |
-| Settlement broadcast | recorded locally for safety | USDC on Base |
-| Marketplace, the x402 Bazaar on Base | the protocol it speaks is the Bazaar's | listed and discoverable |
+| Piece | Demo, local settlement | Demo on Base Sepolia, PERPETUA_LIVE=1 | Mainnet |
+| --- | --- | --- | --- |
+| x402 protocol, 402 challenge and X-PAYMENT handshake | real | real | real |
+| Buyer signatures, EIP-3009 TransferWithAuthorization | real, signed and verified with viem | real | real |
+| The signal rationale | real Gemini call, or deterministic fallback | real Gemini | real Gemini |
+| The signal, risk score, trend, anomaly | real computation | real | real |
+| Settlement, USDC actually moves on chain | recorded locally | real transferWithAuthorization on Base Sepolia | real, Circle USDC |
+| The USDC token | n/a | our TestUSDC EIP-3009 token, same domain as Circle USDC | Circle USDC |
+| Ledger | local JSON file or MongoDB Atlas | same | MongoDB Atlas |
+| Marketplace, the x402 Bazaar on Base | the protocol it speaks is the Bazaar's | same | listed and discoverable |
 
-The only simulated piece is the final settlement broadcast. Everything that proves the
-loop is real, the payment protocol, the signatures, the computed product, and the
-ledger, is real. Going live is configuration, not new code.
+We ran the full loop on Base Sepolia with PERPETUA_LIVE=1. Every signal sale settled as
+a real transferWithAuthorization that moved test USDC from a buyer wallet to the agent,
+confirmed on chain. The agent's balance grew from real settled income with no human top
+up. See `docs/DEMO-EVIDENCE.md` for the transaction hashes.
+
+The one honest caveat is the USDC token itself. The canonical Base Sepolia USDC is
+minted only by the Circle faucet, which was down, so the testnet demo uses our own
+TestUSDC, an EIP-3009 token with the exact same EIP-712 domain as Circle USDC, name
+USDC and version 2, so the same signatures verify. On mainnet the agent points at the
+real Circle USDC, which is the identical interface. That is a one line config change,
+the `USDC_ADDRESS`.
 
 ## Going live, the config flip
 
@@ -81,17 +90,30 @@ Copy `.env.example` to `.env` and set:
 
 ```bash
 PERPETUA_LIVE=1
-MONGODB_URI=...                 # MongoDB Atlas, the ledger and the sponsor integration
-BASE_RPC_URL=...                # a Base endpoint, Sepolia for the testnet demo
-USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e   # Base Sepolia USDC, swap for mainnet
-AGENT_PRIVATE_KEY=0x...         # the agent identity that receives signal sales
-LLM_PROVIDER=anthropic          # narrate the rationale with a real model, optional
-ANTHROPIC_API_KEY=...
+BASE_RPC_URL=https://sepolia.base.org   # a Base endpoint, Sepolia for the testnet demo
+AGENT_PRIVATE_KEY=0x...                  # agent, the relayer, receives sales, needs test ETH for gas
+BUYER_PRIVATE_KEYS=0x...                 # one or more buyer wallets, comma separated
+USDC_ADDRESS=...                         # the USDC token, see the deploy step below
+LLM_PROVIDER=gemini                      # real rationale via Vertex AI, ADC auth, no API key
+GOOGLE_CLOUD_PROJECT=...
+# MONGODB_URI=...                        # optional, MongoDB Atlas ledger and the sponsor award
 ```
 
-Fund the buyer wallets with Base Sepolia test USDC, run `npm run dev`, and the same
-handshake settles on chain for real. Flip `USDC_ADDRESS` and the network to mainnet and
-it earns real USDC.
+Steps for the Base Sepolia run:
+
+1. Fund the agent address with a little test ETH for gas, any Base Sepolia ETH faucet.
+2. Get the USDC token. The canonical Circle USDC needs the Circle faucet. If that is
+   unavailable, deploy the bundled EIP-3009 token instead, it has the same domain as
+   Circle USDC so the same signatures verify:
+   ```bash
+   node scripts/deploy-token.mjs      # deploys TestUSDC, mints to the buyers, prints the address
+   ```
+   Put the printed address in `USDC_ADDRESS`.
+3. `npm run dev`. Every signal sale now settles as a real transferWithAuthorization on
+   Base Sepolia. Check funding any time with `node scripts/base-status.mjs`.
+
+For mainnet, point `USDC_ADDRESS` at the real Circle USDC and the network at Base
+mainnet. Same code, real USDC.
 
 ## Architecture
 

@@ -59,9 +59,21 @@ console.log(`token deployed at ${token}  tx ${deployHash}`);
 
 const c = getContract({ address: token, abi, client: wallet });
 for (const b of buyers) {
-  const h = await c.write.mint([b, MINT_USDC]);
-  await pub.waitForTransactionReceipt({ hash: h });
-  console.log(`minted 1000 USDC to buyer ${b}  tx ${h}`);
+  // Mint with an explicit nonce and a status check. A mint sent too close behind the
+  // deploy can land on a stale nonce and revert, so confirm it took and retry once.
+  let minted = false;
+  for (let attempt = 0; attempt < 3 && !minted; attempt++) {
+    const nonce = await pub.getTransactionCount({ address: agent.address });
+    const h = await c.write.mint([b, MINT_USDC], { nonce });
+    const r = await pub.waitForTransactionReceipt({ hash: h });
+    if (r.status === "success") {
+      console.log(`minted 1000 USDC to buyer ${b}  tx ${h}`);
+      minted = true;
+    } else {
+      console.warn(`mint attempt ${attempt + 1} reverted for ${b}, retrying`);
+    }
+  }
+  if (!minted) throw new Error(`could not mint to ${b}`);
 }
 
 console.log("\nDONE. Set in .env:");

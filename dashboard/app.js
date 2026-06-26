@@ -102,6 +102,10 @@ async function refreshFeed() {
   }
 }
 
+function isTxHash(h) {
+  return typeof h === "string" && /^0x[0-9a-f]{64}$/i.test(h);
+}
+
 function ledgerRow(e) {
   const sale = e.kind === "signal_sale";
   const seed = e.kind === "seed";
@@ -113,7 +117,19 @@ function ledgerRow(e) {
   const row = el("div", "row");
   const left = el("div");
   left.appendChild(el("div", undefined, label));
-  left.appendChild(el("div", "mono", `${who}  ·  ${e.mirrorTx || ""}`));
+  const meta = el("div", "mono");
+  meta.appendChild(document.createTextNode(`${who}  ·  `));
+  // A real Base Sepolia settlement hash links to the explorer, otherwise show the ref.
+  if (isTxHash(e.settlement)) {
+    const a = el("a", "txlink", "on chain ↗");
+    a.href = "https://sepolia.basescan.org/tx/" + e.settlement;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    meta.appendChild(a);
+  } else {
+    meta.appendChild(document.createTextNode(e.mirrorTx || e.settlement || ""));
+  }
+  left.appendChild(meta);
   row.appendChild(left);
   row.appendChild(el("div", "amt " + cls, `${sign}${usdc(e.amount.replace("-", ""))}`));
   return row;

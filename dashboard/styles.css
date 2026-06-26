@@ -104,6 +104,8 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; }
 }
 .row .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
 .row .mono { color: var(--muted); font-size: 11px; font-family: ui-monospace, monospace; }
+.row .txlink { color: var(--accent); text-decoration: none; }
+.row .txlink:hover { text-decoration: underline; }
 footer {
   text-align: center;
   color: var(--muted);

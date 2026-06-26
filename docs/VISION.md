@@ -62,13 +62,14 @@ earned more than it spent.
 
 **On screen:** three checkmarks.
 
-> Real x402 protocol and signatures. Real database ledger with an on chain mirror.
-> Real marketplace, the x402 Bazaar on Base, already live.
+> Real x402 protocol and signatures. Real settlement on Base Sepolia, every sale a
+> confirmed on chain USDC transfer. Real marketplace, the x402 Bazaar on Base, live.
 
-**Say:** Be honest about scope. The payment protocol, the signatures, the ledger, and
-the marketplace are all real and live. The only thing the demo simulates is the final
-settlement broadcast, kept local for safety. Going live on Base is a change of
-configuration, not new code.
+**Say:** Be honest about scope, and then show the receipts. We ran this on the Base
+Sepolia test network with settlement on. Every sale moved real test USDC from a buyer
+to the agent, each one a confirmed transaction you can open in the explorer. Test money,
+real rails. The only thing left for the main network is listing and real buyers, not new
+code.
 
 ## Slide 6, the long term (about 30 seconds)
 

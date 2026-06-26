@@ -3,114 +3,185 @@
 > tsx src/index.ts
 
 ledger, local JSON file
-market on http://127.0.0.1:4021  agent 0xC43339456698351f512b7F497C2A5927a4d96aDe
+market on http://127.0.0.1:4021  agent 0xFa4e0474485BE047b97977f1FC805471f47d9d88
 dashboard http://127.0.0.1:4022
-[research] balance 0.045000 USDC  earned 0.030000  spent 0.005000  sales 3  signal risk 27 up
-[research] balance 0.070000 USDC  earned 0.060000  spent 0.010000  sales 3  signal risk 25 flat
-[research] balance 0.095000 USDC  earned 0.090000  spent 0.015000  sales 3  signal risk 44 down
-[research] balance 0.120000 USDC  earned 0.120000  spent 0.020000  sales 3  signal risk 23 flat
-[research] balance 0.145000 USDC  earned 0.150000  spent 0.025000  sales 3  signal risk 41 up
-[research] balance 0.170000 USDC  earned 0.180000  spent 0.030000  sales 3  signal risk 55 down
-[research] balance 0.195000 USDC  earned 0.210000  spent 0.035000  sales 3  signal risk 48 down
-[research] balance 0.220000 USDC  earned 0.240000  spent 0.040000  sales 3  signal risk 26 flat
-[research] balance 0.245000 USDC  earned 0.270000  spent 0.045000  sales 3  signal risk 51 down
-[research] balance 0.270000 USDC  earned 0.300000  spent 0.050000  sales 3  signal risk 43 up
-[research] balance 0.295000 USDC  earned 0.330000  spent 0.055000  sales 3  signal risk 65 down
-[research] balance 0.320000 USDC  earned 0.360000  spent 0.060000  sales 3  signal risk 54 down
-[research] balance 0.345000 USDC  earned 0.390000  spent 0.065000  sales 3  signal risk 57 down
-[research] balance 0.370000 USDC  earned 0.420000  spent 0.070000  sales 3  signal risk 45 up
-[research] balance 0.395000 USDC  earned 0.450000  spent 0.075000  sales 3  signal risk 34 up
-[research] balance 0.420000 USDC  earned 0.480000  spent 0.080000  sales 3  signal risk 55 up
-[research] balance 0.445000 USDC  earned 0.510000  spent 0.085000  sales 3  signal risk 39 down
-[research] balance 0.470000 USDC  earned 0.540000  spent 0.090000  sales 3  signal risk 32 flat
-[research] balance 0.495000 USDC  earned 0.570000  spent 0.095000  sales 3  signal risk 29 flat
-[research] balance 0.520000 USDC  earned 0.600000  spent 0.100000  sales 3  signal risk 42 down
-[research] balance 0.545000 USDC  earned 0.630000  spent 0.105000  sales 3  signal risk 47 up
-[research] balance 0.570000 USDC  earned 0.660000  spent 0.110000  sales 3  signal risk 39 up
-[research] balance 0.595000 USDC  earned 0.690000  spent 0.115000  sales 3  signal risk 39 down
-[research] balance 0.620000 USDC  earned 0.720000  spent 0.120000  sales 3  signal risk 39 up
-[research] balance 0.645000 USDC  earned 0.750000  spent 0.125000  sales 3  signal risk 69 down
-[research] balance 0.670000 USDC  earned 0.780000  spent 0.130000  sales 3  signal risk 46 down
-[research] balance 0.695000 USDC  earned 0.810000  spent 0.135000  sales 3  signal risk 34 up
-[research] balance 0.720000 USDC  earned 0.840000  spent 0.140000  sales 3  signal risk 69 down
-[research] balance 0.745000 USDC  earned 0.870000  spent 0.145000  sales 3  signal risk 49 down
-[research] balance 0.770000 USDC  earned 0.900000  spent 0.150000  sales 3  signal risk 23 flat
-[research] balance 0.795000 USDC  earned 0.930000  spent 0.155000  sales 3  signal risk 48 up
-[research] balance 0.820000 USDC  earned 0.960000  spent 0.160000  sales 3  signal risk 27 up
-[research] balance 0.845000 USDC  earned 0.990000  spent 0.165000  sales 3  signal risk 31 up
-[research] balance 0.870000 USDC  earned 1.020000  spent 0.170000  sales 3  signal risk 51 down
-[research] balance 0.895000 USDC  earned 1.050000  spent 0.175000  sales 3  signal risk 29 flat
-[research] balance 0.920000 USDC  earned 1.080000  spent 0.180000  sales 3  signal risk 32 flat
-[research] balance 0.945000 USDC  earned 1.110000  spent 0.185000  sales 3  signal risk 54 up
-[research] balance 0.970000 USDC  earned 1.140000  spent 0.190000  sales 3  signal risk 49 down
-[research] balance 0.995000 USDC  earned 1.170000  spent 0.195000  sales 3  signal risk 43 up
-[research] balance 1.020000 USDC  earned 1.200000  spent 0.200000  sales 3  signal risk 61 down
-[research] balance 1.045000 USDC  earned 1.230000  spent 0.205000  sales 3  signal risk 45 up
-[research] balance 1.070000 USDC  earned 1.260000  spent 0.210000  sales 3  signal risk 38 down
-[research] balance 1.095000 USDC  earned 1.290000  spent 0.215000  sales 3  signal risk 47 up
-[research] balance 1.120000 USDC  earned 1.320000  spent 0.220000  sales 3  signal risk 44 down
-[research] balance 1.145000 USDC  earned 1.350000  spent 0.225000  sales 3  signal risk 49 up
-[research] balance 1.170000 USDC  earned 1.380000  spent 0.230000  sales 3  signal risk 44 down
-[research] balance 1.195000 USDC  earned 1.410000  spent 0.235000  sales 3  signal risk 25 up
-[research] balance 1.220000 USDC  earned 1.440000  spent 0.240000  sales 3  signal risk 33 up
-[research] balance 1.245000 USDC  earned 1.470000  spent 0.245000  sales 3  signal risk 26 flat
-[research] balance 1.270000 USDC  earned 1.500000  spent 0.250000  sales 3  signal risk 44 down
-[research] balance 1.295000 USDC  earned 1.530000  spent 0.255000  sales 3  signal risk 51 down
-[research] balance 1.320000 USDC  earned 1.560000  spent 0.260000  sales 3  signal risk 52 up
-[research] balance 1.345000 USDC  earned 1.590000  spent 0.265000  sales 3  signal risk 59 down
-[research] balance 1.370000 USDC  earned 1.620000  spent 0.270000  sales 3  signal risk 62 down
-[research] balance 1.395000 USDC  earned 1.650000  spent 0.275000  sales 3  signal risk 24 up
-[research] balance 1.420000 USDC  earned 1.680000  spent 0.280000  sales 3  signal risk 59 down
-[research] balance 1.445000 USDC  earned 1.710000  spent 0.285000  sales 3  signal risk 25 up
-[research] balance 1.470000 USDC  earned 1.740000  spent 0.290000  sales 3  signal risk 53 down
-[research] balance 1.495000 USDC  earned 1.770000  spent 0.295000  sales 3  signal risk 60 up
-[research] balance 1.520000 USDC  earned 1.800000  spent 0.300000  sales 3  signal risk 35 up
-[research] balance 1.545000 USDC  earned 1.830000  spent 0.305000  sales 3  signal risk 40 up
-[research] balance 1.570000 USDC  earned 1.860000  spent 0.310000  sales 3  signal risk 54 up
-[research] balance 1.595000 USDC  earned 1.890000  spent 0.315000  sales 3  signal risk 31 up
-[research] balance 1.620000 USDC  earned 1.920000  spent 0.320000  sales 3  signal risk 53 up
-[research] balance 1.645000 USDC  earned 1.950000  spent 0.325000  sales 3  signal risk 28 up
-[research] balance 1.670000 USDC  earned 1.980000  spent 0.330000  sales 3  signal risk 57 up
-[research] balance 1.695000 USDC  earned 2.010000  spent 0.335000  sales 3  signal risk 46 up
-[research] balance 1.720000 USDC  earned 2.040000  spent 0.340000  sales 3  signal risk 34 up
-[research] balance 1.745000 USDC  earned 2.070000  spent 0.345000  sales 3  signal risk 39 up
-[research] balance 1.770000 USDC  earned 2.100000  spent 0.350000  sales 3  signal risk 22 flat
-[research] balance 1.795000 USDC  earned 2.130000  spent 0.355000  sales 3  signal risk 36 down
-[research] balance 1.820000 USDC  earned 2.160000  spent 0.360000  sales 3  signal risk 66 down
-[research] balance 1.845000 USDC  earned 2.190000  spent 0.365000  sales 3  signal risk 29 up
-[research] balance 1.870000 USDC  earned 2.220000  spent 0.370000  sales 3  signal risk 29 up
-[research] balance 1.895000 USDC  earned 2.250000  spent 0.375000  sales 3  signal risk 34 up
-[research] balance 1.920000 USDC  earned 2.280000  spent 0.380000  sales 3  signal risk 38 up
-[research] balance 1.945000 USDC  earned 2.310000  spent 0.385000  sales 3  signal risk 69 down
-[research] balance 1.970000 USDC  earned 2.340000  spent 0.390000  sales 3  signal risk 26 up
-[research] balance 1.995000 USDC  earned 2.370000  spent 0.395000  sales 3  signal risk 43 up
-[research] balance 2.020000 USDC  earned 2.400000  spent 0.400000  sales 3  signal risk 23 flat
-[research] balance 2.045000 USDC  earned 2.430000  spent 0.405000  sales 3  signal risk 43 up
-[research] balance 2.070000 USDC  earned 2.460000  spent 0.410000  sales 3  signal risk 58 down
-[research] balance 2.095000 USDC  earned 2.490000  spent 0.415000  sales 3  signal risk 48 down
-[research] balance 2.120000 USDC  earned 2.520000  spent 0.420000  sales 3  signal risk 46 down
-[research] balance 2.145000 USDC  earned 2.550000  spent 0.425000  sales 3  signal risk 49 up
-[research] balance 2.170000 USDC  earned 2.580000  spent 0.430000  sales 3  signal risk 36 up
-[research] balance 2.195000 USDC  earned 2.610000  spent 0.435000  sales 3  signal risk 57 down
-[research] balance 2.220000 USDC  earned 2.640000  spent 0.440000  sales 3  signal risk 56 down
-[research] balance 2.245000 USDC  earned 2.670000  spent 0.445000  sales 3  signal risk 22 flat
-[research] balance 2.270000 USDC  earned 2.700000  spent 0.450000  sales 3  signal risk 53 up
-[research] balance 2.295000 USDC  earned 2.730000  spent 0.455000  sales 3  signal risk 39 up
-[research] balance 2.320000 USDC  earned 2.760000  spent 0.460000  sales 3  signal risk 57 down
-[research] balance 2.345000 USDC  earned 2.790000  spent 0.465000  sales 3  signal risk 32 flat
-[research] balance 2.370000 USDC  earned 2.820000  spent 0.470000  sales 3  signal risk 41 up
-[research] balance 2.395000 USDC  earned 2.850000  spent 0.475000  sales 3  signal risk 26 up
-[research] balance 2.420000 USDC  earned 2.880000  spent 0.480000  sales 3  signal risk 32 up
-[research] balance 2.445000 USDC  earned 2.910000  spent 0.485000  sales 3  signal risk 48 down
-[research] balance 2.470000 USDC  earned 2.940000  spent 0.490000  sales 3  signal risk 32 up
-[research] balance 2.495000 USDC  earned 2.970000  spent 0.495000  sales 3  signal risk 21 flat
-[research] balance 2.520000 USDC  earned 3.000000  spent 0.500000  sales 3  signal risk 36 up
-[research] balance 2.545000 USDC  earned 3.030000  spent 0.505000  sales 3  signal risk 61 down
-[research] balance 2.570000 USDC  earned 3.060000  spent 0.510000  sales 3  signal risk 38 up
-[research] balance 2.595000 USDC  earned 3.090000  spent 0.515000  sales 3  signal risk 62 up
-[research] balance 2.620000 USDC  earned 3.120000  spent 0.520000  sales 3  signal risk 40 up
-[research] balance 2.645000 USDC  earned 3.150000  spent 0.525000  sales 3  signal risk 21 flat
-[research] balance 2.670000 USDC  earned 3.180000  spent 0.530000  sales 3  signal risk 42 up
-[research] balance 2.695000 USDC  earned 3.210000  spent 0.535000  sales 3  signal risk 49 down
-[research] balance 2.720000 USDC  earned 3.240000  spent 0.540000  sales 3  signal risk 56 down
-[research] balance 2.745000 USDC  earned 3.270000  spent 0.545000  sales 3  signal risk 40 down
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476575, 1782476700, 0x1c30fefe2efbd669debe5ea07d315d4b5bda1f9f0645f3db4bd009e2b074dda9, 0x433ed88e79967f2b208b99071f652d1eb16d0aff928a83b4485ea7b9abce965a411d809a11a0193974e6d766a50d71a0c0187874cc1fbdb778ec7f8a898ee7711b)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[research] balance 0.015000 USDC  earned 0.000000  spent 0.005000  sales 0  signal risk 27 up
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476595, 1782476720, 0x8011ad6faaa061fac0243afe986be8c42cf6ce23539549a43e9814fc040c11b2, 0xe038e8af3f521b83b2bac986ee1ca76eab2e0f5e70cefee1c9ef71bd04e5c4702035fc3a5b57642131f9c447c9f4981668ac2e00f0a8c028fa4a33e1184de0d11b)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[research] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0  signal risk 25 flat
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476599, 1782476724, 0xf60bb04944645702ee74d0c95a45b13814431d52061408be4059cc87922bbb28, 0x0e99b2a08492ee7a7b8bfe6d1398086d8d5a3e7ef316c4e54ed62fbc7795617e4f9c3f993bd9def67f3d626ec54d27b84e2b0a82d335d321102655e6392a316d1c)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476608, 1782476733, 0x601dd4137965175ad1eef85df9bb89c3e511c4d89dd33ec924c4734e20aa2308, 0x0e9fd9a8d58dfd76bd9240eee00dce4057c7e52db836627f74f67cbcab8c4cea6901533ce64af576246af16ace9fa0154dad558e6b7e16cf9979c3bbd69783371b)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476617, 1782476742, 0xeb3d2842b182633115ffd859ae6d40bd2d73491474dc226b521509308e3c321e, 0xfb41c0a96a21b5190d656942a8d8b33d4263f6c2ef44b69beecd2f14b6f6a3631f3a9adcf62adeac841eaef98f74326f7cd85a5e4c90dd63ed2082e19a097abd1c)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476626, 1782476751, 0xe945afd3aaee82ae59d9ede89b4a6f9a83667e7f42f43d9c91c22b33b4546fdf, 0x5b8ccb4caa1b6b59288d30f2c039aa401c2596fafa1ecfe6f2236cd3c66f8e9d1a5a946fff55c5bba0361063e660b4f5f666d6e88a6087ae98e890a0c8231ed21b)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476635, 1782476760, 0xb2c55dc47d85796c0e7918cd46d94d64eaa99d3fd237884eaa52ab0dd2a07555, 0xd9a9c39ae8782a4f271a36564af3141719724607ba5ba38b3aa1110ecd5d8f15286b709ad8b7590bb0c9452159ebb71cdf8146df2c16b6fe69a4d125ca4f7e4e1c)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476644, 1782476769, 0xf8176abd8e6d47a7ac8a4759a379593cab749c02160d43dd49389b078cb3b0a4, 0x84605cb5105f38e20e17699094810522ef3ce76825f08f5cb303715d01088dc2790095a0d0aa65cca08005b4ed1fe4f4a7ce2108d9ccddf631f2f8bbaeb7c6901c)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476653, 1782476778, 0x644f4dc3bb12c1f56a62b62a874cc1e5f3f6440dfc24c8b3b7f308c94be183ed, 0x21619cd72b75b3797a792836d7681979ff3f16669139abf1c69b8ed7ff27e2e777b64edceeb633b4046261fed7069ac1e973605828ab27e666fcee6ddb7e86cb1c)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476662, 1782476787, 0x966f9fd83ef518690d38f5b45c51fec6df5742de0f8b6faf96137128f6dd908a, 0x659ccc981c2b07d289a9e111121e194cc87235b7e34f46230630376cbf12878c4e8b2327489eaa75e5670e229d36fec2a1bc6b9a44182170374b59bdc47127401c)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476671, 1782476796, 0x46461aa78fc63d682284b4192c3ddfee95184e58a7b11c4f37d724c2ca817071, 0xf809615320aa5dd6425396d723127591d9a8f474f39e648430614c969e2ab447692503c88f2a247432e2120b9a4a821f56e660fd7d4dad00fe0222f5cbf2c0531c)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+buyer skipped: The contract function "transferWithAuthorization" reverted with the following reason:
+insufficient balance
+
+Contract Call:
+  address:   0x03ea6b83884782d17ab023b5a74da81208243b7a
+  function:  transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, bytes signature)
+  args:                               (0x29AAAfe4b5aA24Ef7B360e76d81f2C31504FbBd7, 0xFa4e0474485BE047b97977f1FC805471f47d9d88, 10000, 1782476680, 1782476805, 0x9938afd80e6b6e73a014be6f63e574f82bc851f7ffba8103e44ff3fcc0fa0a25, 0x15a1d25b265c98b352f9136e83aee8e8242209b15935c37214323ab2252711e332869b43e30ea609cbf26516fcd78843143978268a81a8487f9d7f7c4dd4c9ef1b)
+  sender:    0xFa4e0474485BE047b97977f1FC805471f47d9d88
+
+Docs: https://viem.sh/docs/contract/writeContract
+Details: execution reverted: insufficient balance
+Version: viem@2.53.1
+[wait] balance 0.010000 USDC  earned 0.000000  spent 0.010000  sales 0
+[wait] balance 0.020000 USDC  earned 0.010000  spent 0.010000  sales 1
+[research] balance 0.025000 USDC  earned 0.020000  spent 0.015000  sales 1  signal risk 44 down
+[research] balance 0.030000 USDC  earned 0.030000  spent 0.020000  sales 1  signal risk 23 flat
+[research] balance 0.035000 USDC  earned 0.040000  spent 0.025000  sales 1  signal risk 41 up
+[research] balance 0.040000 USDC  earned 0.050000  spent 0.030000  sales 1  signal risk 55 down
+[research] balance 0.045000 USDC  earned 0.060000  spent 0.035000  sales 1  signal risk 48 down
+[research] balance 0.050000 USDC  earned 0.070000  spent 0.040000  sales 1  signal risk 26 flat
+[research] balance 0.055000 USDC  earned 0.080000  spent 0.045000  sales 1  signal risk 51 down
+[research] balance 0.060000 USDC  earned 0.090000  spent 0.050000  sales 1  signal risk 43 up
+[research] balance 0.065000 USDC  earned 0.100000  spent 0.055000  sales 1  signal risk 65 down
+[research] balance 0.070000 USDC  earned 0.110000  spent 0.060000  sales 1  signal risk 54 down
+[research] balance 0.075000 USDC  earned 0.120000  spent 0.065000  sales 1  signal risk 57 down
+[research] balance 0.080000 USDC  earned 0.130000  spent 0.070000  sales 1  signal risk 45 up
+[research] balance 0.085000 USDC  earned 0.140000  spent 0.075000  sales 1  signal risk 34 up
+[research] balance 0.090000 USDC  earned 0.150000  spent 0.080000  sales 1  signal risk 55 up
+[research] balance 0.095000 USDC  earned 0.160000  spent 0.085000  sales 1  signal risk 39 down
+[research] balance 0.100000 USDC  earned 0.170000  spent 0.090000  sales 1  signal risk 32 flat
+[research] balance 0.105000 USDC  earned 0.180000  spent 0.095000  sales 1  signal risk 29 flat
+[research] balance 0.110000 USDC  earned 0.190000  spent 0.100000  sales 1  signal risk 42 down
+[research] balance 0.115000 USDC  earned 0.200000  spent 0.105000  sales 1  signal risk 47 up
+[research] balance 0.120000 USDC  earned 0.210000  spent 0.110000  sales 1  signal risk 39 up
+[research] balance 0.125000 USDC  earned 0.220000  spent 0.115000  sales 1  signal risk 39 down
+[research] balance 0.130000 USDC  earned 0.230000  spent 0.120000  sales 1  signal risk 39 up
+[research] balance 0.135000 USDC  earned 0.240000  spent 0.125000  sales 1  signal risk 69 down
