@@ -20,8 +20,11 @@ export interface LatestState {
 const TAGS = ["crypto", "risk", "signals", "market-data", "trading", "ethereum"];
 
 export async function createSellerApp(payTo: string, latest: LatestState) {
-  const facilitatorConfig =
-    config.cdpKeyId && config.cdpKeySecret
+  // Facilitator selection. A configured URL such as the PayAI facilitator wins, it needs
+  // no KYB and covers gas. Otherwise CDP if creds are present, else the public testnet one.
+  const facilitatorConfig = config.facilitatorUrl
+    ? { url: config.facilitatorUrl }
+    : config.cdpKeyId && config.cdpKeySecret
       ? createFacilitatorConfig(config.cdpKeyId, config.cdpKeySecret)
       : { url: "https://x402.org/facilitator" };
 

@@ -9,7 +9,7 @@
 //   BUYER_KEY=0x... BUY_URL=https://api.tradeperpetua.xyz/report node scripts/buy-once.mjs
 import { wrapFetchWithPayment } from "@x402/fetch";
 import { x402Client } from "@x402/core/client";
-import { registerExactEvmScheme } from "@x402/evm/exact/client/register";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { privateKeyToAccount } from "viem/accounts";
 
 const KEY = process.env.BUYER_KEY;
@@ -20,11 +20,10 @@ const account = privateKeyToAccount(KEY);
 console.log("buyer", account.address);
 console.log("buying", URL);
 
-const client = new x402Client();
-registerExactEvmScheme(client, {
-  signer: account,
-  options: { rpcUrl: process.env.BASE_RPC_URL || "https://mainnet.base.org" },
-});
+const client = new x402Client().register(
+  "eip155:8453",
+  new ExactEvmScheme(account, { rpcUrl: process.env.BASE_RPC_URL || "https://mainnet.base.org" }),
+);
 
 const fetchWithPay = wrapFetchWithPayment(fetch, client);
 

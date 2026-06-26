@@ -47,6 +47,9 @@ export const config = {
   // facilitator. Receives real USDC to sellerPayTo, lists on the Bazaar.
   cdpKeyId: process.env.CDP_API_KEY_ID ?? "",
   cdpKeySecret: process.env.CDP_API_KEY_SECRET ?? "",
+  // A facilitator URL to use instead of CDP, for example the PayAI facilitator which
+  // needs no API keys, no KYB, and covers gas. Takes priority over CDP when set.
+  facilitatorUrl: process.env.FACILITATOR_URL ?? "",
   sellerPayTo: process.env.SELLER_PAYTO ?? "",
   // CAIP-2 network for the seller, Base mainnet when live, Base Sepolia otherwise.
   sellerNetwork: process.env.SELLER_NETWORK ?? (process.env.PERPETUA_LIVE === "1" ? "eip155:8453" : "eip155:84532"),
