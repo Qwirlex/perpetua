@@ -66,6 +66,9 @@ export const config = {
   contactEmail: process.env.CONTACT_EMAIL ?? "",
   // Block to start scanning seller income from, near the mainnet launch, keeps the scan cheap.
   incomeStartBlock: process.env.INCOME_START_BLOCK ?? "47850000",
+  // Base MAINNET rpc for the income scan, distinct from baseRpc which may point at testnet
+  // for the demo loop. Empty uses viem's default Base mainnet endpoint.
+  incomeRpc: process.env.INCOME_RPC_URL ?? "",
   coingeckoUrl:
     process.env.COINGECKO_URL ??
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum",

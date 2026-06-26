@@ -22,7 +22,7 @@ export interface IncomeSale {
 }
 
 export class IncomeTracker {
-  private client = createPublicClient({ chain: base, transport: http(config.baseRpc || undefined) });
+  private client = createPublicClient({ chain: base, transport: http(config.incomeRpc || undefined) });
   private seller: Address | null = config.sellerPayTo ? getAddress(config.sellerPayTo) : null;
   private startBlock = BigInt(config.incomeStartBlock);
   private lastScanned = 0n;
