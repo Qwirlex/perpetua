@@ -49,7 +49,7 @@ try {
   const sellerApp = await createSellerApp(sellerPayTo, latest);
   sellerApp.listen(config.sellerPort, () =>
     console.log(
-      `seller on http://127.0.0.1:${config.sellerPort}  payTo ${sellerPayTo}  network ${config.sellerNetwork}  ${config.cdpKeyId ? "CDP facilitator" : "testnet facilitator"}`,
+      `seller on http://127.0.0.1:${config.sellerPort}  payTo ${sellerPayTo}  network ${config.sellerNetwork}  facilitator ${config.facilitatorUrl || (config.cdpKeyId ? "CDP" : "x402.org testnet")}`,
     ),
   );
 } catch (e) {
