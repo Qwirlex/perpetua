@@ -55,11 +55,31 @@ async function callAnthropic(m: MarketSnapshot, c: SignalCore): Promise<string> 
   return d.content?.[0]?.text ?? "";
 }
 
+// Gemini via Vertex AI, application default credentials, the same setup the Solvent
+// and Aegis projects use. No API key, auth comes from gcloud ADC. Imported lazily so
+// the SDK only loads when the provider is actually gemini.
+async function callGemini(m: MarketSnapshot, c: SignalCore): Promise<string> {
+  const { GoogleGenAI } = await import("@google/genai");
+  const ai = new GoogleGenAI({
+    vertexai: true,
+    project: config.googleProject,
+    location: config.geminiLocation,
+  });
+  const r = await ai.models.generateContent({
+    model: config.geminiModel,
+    contents: prompt(m, c),
+  });
+  return (r.text ?? "").trim();
+}
+
 async function callProvider(m: MarketSnapshot, c: SignalCore): Promise<string> {
+  if (config.llmProvider === "gemini" && config.googleProject) {
+    return callGemini(m, c);
+  }
   if (config.llmProvider === "anthropic" && config.anthropicKey) {
     return callAnthropic(m, c);
   }
-  // gemini and other providers slot in here, reusing the Solvent Vertex setup.
+  // No provider matched, fall back to the deterministic rationale.
   throw new Error("no live provider configured");
 }
 

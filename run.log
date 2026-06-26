@@ -1,0 +1,14 @@
+
+> dev
+> tsx src/index.ts
+
+ledger, local JSON file
+market on http://127.0.0.1:4021  agent 0xC43339456698351f512b7F497C2A5927a4d96aDe
+dashboard http://127.0.0.1:4022
+[research] balance 0.045000 USDC  earned 0.030000  spent 0.005000  sales 3  signal risk 27 up
+[research] balance 0.070000 USDC  earned 0.060000  spent 0.010000  sales 3  signal risk 25 flat
+[research] balance 0.095000 USDC  earned 0.090000  spent 0.015000  sales 3  signal risk 44 down
+[research] balance 0.120000 USDC  earned 0.120000  spent 0.020000  sales 3  signal risk 23 flat
+[research] balance 0.145000 USDC  earned 0.150000  spent 0.025000  sales 3  signal risk 41 up
+[research] balance 0.170000 USDC  earned 0.180000  spent 0.030000  sales 3  signal risk 55 down
+[research] balance 0.195000 USDC  earned 0.210000  spent 0.035000  sales 3  signal risk 48 down

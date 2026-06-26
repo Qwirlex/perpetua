@@ -15,7 +15,7 @@ export interface PaidResult<T> {
 export async function payAndGet<T>(
   url: string,
   acct: Account,
-  settle: (req: PaymentRequirements) => Promise<string>,
+  settle: (req: PaymentRequirements, payload: PaymentPayload) => Promise<string>,
 ): Promise<PaidResult<T>> {
   const first = await fetch(url);
   if (first.ok) {
@@ -29,7 +29,7 @@ export async function payAndGet<T>(
   const req = body.accepts[0];
 
   const payload: PaymentPayload = await signAuthorization(acct, req);
-  const settlement = await settle(req);
+  const settlement = await settle(req, payload);
 
   const paid = await fetch(url, {
     headers: { "x-payment": encodeHeader(payload), "x-settlement": settlement },

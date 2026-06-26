@@ -24,7 +24,12 @@ const latest: { signal: Signal | null } = { signal: null };
 const market = new MarketSource();
 const treasury = new Treasury(config.seedMicro);
 const cycles: LoopCycle[] = [];
-const buyers = Array.from({ length: config.buyersPerCycle }, () => new BuyerAgent());
+// In live mode use the funded buyer wallets from the environment. In demo generate
+// fresh throwaway wallets each boot.
+const buyers =
+  config.live && config.buyerKeys.length > 0
+    ? config.buyerKeys.map((k) => new BuyerAgent(k as `0x${string}`))
+    : Array.from({ length: config.buyersPerCycle }, () => new BuyerAgent());
 
 // SignalMarket, the earn endpoint, sales pay the agent address.
 const marketApp = createMarketApp(agent.address, () => latest.signal);

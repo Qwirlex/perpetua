@@ -10,6 +10,7 @@
     "api": "tsx src/api/server.ts"
   },
   "dependencies": {
+    "@google/genai": "^2.10.0",
     "dotenv": "^16",
     "express": "^4",
     "mongodb": "^6",

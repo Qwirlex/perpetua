@@ -28,9 +28,14 @@ export const config = {
 
   agentPrivateKey: process.env.AGENT_PRIVATE_KEY ?? "",
   mirrorPrivateKey: process.env.MIRROR_PRIVATE_KEY ?? "",
+  buyerKeys: (process.env.BUYER_PRIVATE_KEYS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
 
   llmProvider: process.env.LLM_PROVIDER ?? "none",
   geminiModel: process.env.GEMINI_MODEL ?? "gemini-3.5-flash",
+  geminiLocation: process.env.GEMINI_LOCATION ?? "global",
   googleProject: process.env.GOOGLE_CLOUD_PROJECT ?? "",
   anthropicKey: process.env.ANTHROPIC_API_KEY ?? "",
 
