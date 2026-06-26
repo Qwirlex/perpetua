@@ -2,6 +2,7 @@ import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
+import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { config } from "../shared/config.js";
 import { buildReport } from "../research/report.js";
@@ -18,6 +19,45 @@ export interface LatestState {
 }
 
 const TAGS = ["crypto", "risk", "signals", "market-data", "trading", "ethereum"];
+
+// Optional asset query param, currently ETH. Gives agents an input schema to read.
+const INPUT_SCHEMA = {
+  properties: {
+    asset: { type: "string", enum: ["ETH"], description: "Asset symbol, currently ETH" },
+  },
+};
+
+const SIGNAL_OUTPUT = {
+  example: { asset: "ETH", price: 1578.1, score: 23, trend: "flat", anomaly: false, rationale: "ETH is steady with low risk." },
+  schema: {
+    type: "object",
+    properties: {
+      asset: { type: "string" },
+      price: { type: "number" },
+      score: { type: "number", description: "Risk score 0 to 100" },
+      trend: { type: "string", enum: ["up", "down", "flat"] },
+      anomaly: { type: "boolean" },
+      rationale: { type: "string" },
+    },
+  },
+};
+
+const REPORT_OUTPUT = {
+  example: {
+    asset: "ETH", price: 1578.1, score: 23, trend: "flat", anomaly: false, confidence: "medium",
+    factors: [{ name: "Price move 24h", reading: "0.4 percent", weight: "low" }],
+    analysis: "ETH is steady near 1578 with low risk, volume is moderate and gas is calm.",
+  },
+  schema: {
+    type: "object",
+    properties: {
+      asset: { type: "string" }, price: { type: "number" }, score: { type: "number" },
+      trend: { type: "string" }, anomaly: { type: "boolean" },
+      confidence: { type: "string", enum: ["low", "medium", "high"] },
+      factors: { type: "array" }, analysis: { type: "string" },
+    },
+  },
+};
 
 export async function createSellerApp(payTo: string, latest: LatestState) {
   // Facilitator selection. A configured URL such as the PayAI facilitator wins, it needs
@@ -68,6 +108,13 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           description:
             "Crypto risk signal for an asset, a 0 to 100 risk score plus a trend call and an on chain anomaly flag with a short plain language rationale.",
           tags: TAGS,
+          extensions: {
+            ...declareDiscoveryExtension({
+              input: { asset: "ETH" },
+              inputSchema: INPUT_SCHEMA,
+              output: SIGNAL_OUTPUT,
+            }),
+          },
         },
         "GET /report": {
           accepts: {
@@ -80,6 +127,13 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           description:
             "Enriched crypto risk report, a weighted factor breakdown plus a written analysis and a confidence label, for agents that want a real answer not just a ping.",
           tags: TAGS,
+          extensions: {
+            ...declareDiscoveryExtension({
+              input: { asset: "ETH" },
+              inputSchema: INPUT_SCHEMA,
+              output: REPORT_OUTPUT,
+            }),
+          },
         },
       },
       resourceServer,
