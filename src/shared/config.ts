@@ -56,6 +56,7 @@ export const config = {
   basicPrice: process.env.BASIC_PRICE ?? "$0.005",
   reportPrice: process.env.REPORT_PRICE ?? "$0.05",
   sellerPort: n(process.env.SELLER_PORT, 4055),
+  sellerPublicUrl: process.env.SELLER_PUBLIC_URL ?? "https://api.tradeperpetua.xyz",
   coingeckoUrl:
     process.env.COINGECKO_URL ??
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum",
