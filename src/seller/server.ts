@@ -232,6 +232,7 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
       title: "Perpetua crypto intelligence",
       version: "1.0.0",
       description: "An AI agent that sells crypto risk signals over x402. Pay per call in USDC on Base.",
+      ...(config.contactEmail ? { contact: { name: "Perpetua", email: config.contactEmail, url: "https://tradeperpetua.xyz" } } : {}),
     },
     servers: [{ url: base }],
     paths: {
@@ -240,6 +241,19 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     },
   };
   app.get("/openapi.json", (_req, res) => res.json(openapi));
+
+  // A small icon so x402scan and clients can show a logo. SVG, an upward line on dark.
+  const favicon =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+    '<rect width="64" height="64" rx="14" fill="#0a0e16"/>' +
+    '<polyline points="12,46 26,34 36,40 52,16" fill="none" stroke="#6ea8fe" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="52" cy="16" r="5" fill="#3fd07f"/>' +
+    "</svg>";
+  const sendFavicon = (_req: express.Request, res: express.Response) => {
+    res.type("image/svg+xml").send(favicon);
+  };
+  app.get("/favicon.svg", sendFavicon);
+  app.get("/favicon.ico", sendFavicon);
 
   // Free, a plain catalog so a human or an agent can see what is sold and the price.
   app.get("/", (_req, res) => {
