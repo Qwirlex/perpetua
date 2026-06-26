@@ -21,7 +21,7 @@ export interface CycleDeps {
   ledger: Ledger;
   sell: Sell;
   ts: number;
-  latest?: { signal: Signal | null };
+  latest?: { signal: Signal | null; snapshot?: import("../shared/types.js").MarketSnapshot | null };
 }
 
 let n = 0;
@@ -61,7 +61,10 @@ export async function runCycle(deps: CycleDeps): Promise<LoopCycle> {
       ref: r.signal.id,
     });
     signal = r.signal;
-    if (deps.latest) deps.latest.signal = signal;
+    if (deps.latest) {
+      deps.latest.signal = signal;
+      deps.latest.snapshot = snap;
+    }
   }
 
   // Sell whatever the latest signal is. Even on a wait cycle the prior signal earns.

@@ -1,5 +1,6 @@
 import { config } from "../shared/config.js";
 import { mulberry32 } from "../shared/rng.js";
+import { coingeckoSnapshot } from "./coingecko.js";
 import type { MarketSnapshot } from "../shared/types.js";
 
 // The market the agent studies and sells into. In demo it evolves a seeded synthetic
@@ -12,6 +13,13 @@ export class MarketSource {
   private step = 0;
 
   async snapshot(ts: number): Promise<MarketSnapshot> {
+    if (config.useRealData) {
+      try {
+        return await coingeckoSnapshot(ts);
+      } catch {
+        // fall through, a data outage never stops the loop
+      }
+    }
     if (config.marketDataUrl) {
       try {
         return await this.fetchReal(ts);

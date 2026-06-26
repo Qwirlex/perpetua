@@ -1,5 +1,6 @@
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import { createMarketApp } from "./market-server/server.js";
+import { createSellerApp } from "./seller/server.js";
 import { createApiApp } from "./api/server.js";
 import { BuyerAgent } from "./buyers/buyerAgent.js";
 import { Treasury } from "./treasury/treasury.js";
@@ -9,7 +10,7 @@ import { mirror } from "./ledger/chainMirror.js";
 import { runCycle, type Sell, type SaleReceipt } from "./controller/loop.js";
 import { config } from "./shared/config.js";
 import { toUsdc } from "./shared/money.js";
-import type { LoopCycle, Signal, LedgerEntry } from "./shared/types.js";
+import type { LoopCycle, Signal, LedgerEntry, MarketSnapshot } from "./shared/types.js";
 
 // Perpetua orchestrator. Boot the SignalMarket, the buyer agents, the ledger and
 // treasury, then run the self funding loop forever. Each cycle the agent decides
@@ -20,7 +21,10 @@ const agent = config.agentPrivateKey
   ? privateKeyToAccount(config.agentPrivateKey as `0x${string}`)
   : privateKeyToAccount(generatePrivateKey());
 
-const latest: { signal: Signal | null } = { signal: null };
+const latest: { signal: Signal | null; snapshot: MarketSnapshot | null } = {
+  signal: null,
+  snapshot: null,
+};
 const market = new MarketSource();
 const treasury = new Treasury(config.seedMicro);
 const cycles: LoopCycle[] = [];
@@ -37,6 +41,22 @@ const marketServer = marketApp.listen(config.marketPort, () =>
   console.log(`market on http://127.0.0.1:${config.marketPort}  agent ${agent.address}`),
 );
 const marketUrl = `http://127.0.0.1:${config.marketPort}`;
+
+// The real earn surface, the public x402 v2 endpoint settled by the CDP facilitator.
+// Sales pay the seller wallet. Outside agents discover it on the Bazaar and pay in USDC.
+const sellerPayTo = config.sellerPayTo || agent.address;
+try {
+  const sellerApp = await createSellerApp(sellerPayTo, latest);
+  sellerApp.listen(config.sellerPort, () =>
+    console.log(
+      `seller on http://127.0.0.1:${config.sellerPort}  payTo ${sellerPayTo}  network ${config.sellerNetwork}  ${config.cdpKeyId ? "CDP facilitator" : "testnet facilitator"}`,
+    ),
+  );
+} catch (e) {
+  console.warn("seller endpoint not started:", (e as Error).message);
+}
+// A facilitator hiccup must not crash the agent or the dashboard.
+process.on("unhandledRejection", (e) => console.warn("unhandledRejection:", String(e)));
 
 const ledger = await createLedger();
 

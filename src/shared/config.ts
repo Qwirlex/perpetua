@@ -40,4 +40,21 @@ export const config = {
   anthropicKey: process.env.ANTHROPIC_API_KEY ?? "",
 
   marketDataUrl: process.env.MARKET_DATA_URL ?? "",
+  // Use the real CoinGecko feed in live mode, synthetic otherwise so tests stay offline.
+  useRealData: process.env.USE_REAL_DATA === "1" || process.env.PERPETUA_LIVE === "1",
+
+  // Monetization, the real x402 seller surface on the official v2 stack plus the CDP
+  // facilitator. Receives real USDC to sellerPayTo, lists on the Bazaar.
+  cdpKeyId: process.env.CDP_API_KEY_ID ?? "",
+  cdpKeySecret: process.env.CDP_API_KEY_SECRET ?? "",
+  sellerPayTo: process.env.SELLER_PAYTO ?? "",
+  // CAIP-2 network for the seller, Base mainnet when live, Base Sepolia otherwise.
+  sellerNetwork: process.env.SELLER_NETWORK ?? (process.env.PERPETUA_LIVE === "1" ? "eip155:8453" : "eip155:84532"),
+  basicPrice: process.env.BASIC_PRICE ?? "$0.005",
+  reportPrice: process.env.REPORT_PRICE ?? "$0.05",
+  sellerPort: n(process.env.SELLER_PORT, 4055),
+  coingeckoUrl:
+    process.env.COINGECKO_URL ??
+    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum",
+  coingeckoKey: process.env.COINGECKO_KEY ?? "",
 };
