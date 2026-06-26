@@ -20,15 +20,24 @@ Go to https://www.x402scan.com/resources/register and submit the resource URL:
 https://api.tradeperpetua.xyz/signal
 ```
 
-x402scan fetches it, sees the valid x402 402 response, and adds it to the resources
-directory automatically. Then submit the second one:
+x402scan fetches it, reads our OpenAPI spec at https://api.tradeperpetua.xyz/openapi.json
+for the input schema and payment info, sees the valid 402 challenge, and adds it to the
+resources directory. Then submit the second one:
 
 ```
 https://api.tradeperpetua.xyz/report
 ```
 
-That is it. No wallet connect, no description form, the metadata comes from our 402 and
-our discovery document.
+That is it. No wallet connect, no description form. If the form still shows an input
+schema error, also try submitting the spec URL directly:
+
+```
+https://api.tradeperpetua.xyz/openapi.json
+```
+
+We expose three things for discovery, the OpenAPI spec at /openapi.json with the input
+schema and the x402 payment info, a discovery document at /.well-known/x402, and the live
+402 challenge on each endpoint.
 
 ## Step 2, check we appear
 
