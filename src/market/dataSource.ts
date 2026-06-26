@@ -9,14 +9,9 @@ import type { MarketSnapshot } from "../shared/types.js";
 // falls back to synthetic so the loop never dies.
 
 const SYNTH_BASE: Record<string, number> = {
-  ETH: 3000,
-  BTC: 60000,
-  SOL: 150,
-  BNB: 600,
-  XRP: 0.6,
-  ADA: 0.45,
-  AVAX: 35,
-  LINK: 15,
+  ETH: 3000, BTC: 60000, SOL: 150, BNB: 600, XRP: 0.6, ADA: 0.45, DOGE: 0.12,
+  AVAX: 35, LINK: 15, DOT: 6, TRX: 0.12, TON: 6, LTC: 90, UNI: 9, ATOM: 9,
+  NEAR: 5, APT: 9, ARB: 1, OP: 2, SUI: 1.5, AAVE: 120, INJ: 25, POL: 0.5, XLM: 0.11,
 };
 
 export class MarketSource {

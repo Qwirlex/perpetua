@@ -20,7 +20,10 @@ export const config = {
   asset: process.env.ASSET ?? "ETH",
   // Assets the agent tracks and sells signals for. The first is the primary, it drives
   // the self funding demo chart. The rest broaden coverage so more agent queries match.
-  assets: (process.env.ASSETS ?? "ETH,BTC,SOL")
+  assets: (
+    process.env.ASSETS ??
+    "ETH,BTC,SOL,BNB,XRP,ADA,DOGE,AVAX,LINK,DOT,TRX,TON,LTC,UNI,ATOM,NEAR,APT,ARB,OP,SUI,AAVE,INJ,POL,XLM"
+  )
     .split(",")
     .map((s) => s.trim().toUpperCase())
     .filter(Boolean),

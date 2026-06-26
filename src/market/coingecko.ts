@@ -10,15 +10,44 @@ import type { MarketSnapshot } from "../shared/types.js";
 
 // Asset symbol to CoinGecko id. Extend as we add assets.
 const SYMBOL_TO_ID: Record<string, string> = {
-  ETH: "ethereum",
   BTC: "bitcoin",
+  ETH: "ethereum",
   SOL: "solana",
   BNB: "binancecoin",
   XRP: "ripple",
   ADA: "cardano",
+  DOGE: "dogecoin",
   AVAX: "avalanche-2",
   LINK: "chainlink",
+  DOT: "polkadot",
+  TRX: "tron",
+  TON: "the-open-network",
+  LTC: "litecoin",
+  UNI: "uniswap",
+  ATOM: "cosmos",
+  NEAR: "near",
+  APT: "aptos",
+  ARB: "arbitrum",
+  OP: "optimism",
+  SUI: "sui",
+  AAVE: "aave",
+  INJ: "injective-protocol",
+  POL: "polygon-ecosystem-token",
+  XLM: "stellar",
+  ETC: "ethereum-classic",
+  HBAR: "hedera-hashgraph",
+  FIL: "filecoin",
+  ICP: "internet-computer",
+  RENDER: "render-token",
+  SEI: "sei-network",
+  TIA: "celestia",
+  MKR: "maker",
 };
+// Reverse map, CoinGecko id to our symbol, so we match returned rows by the stable id
+// rather than the symbol which can change.
+const ID_TO_SYMBOL: Record<string, string> = Object.fromEntries(
+  Object.entries(SYMBOL_TO_ID).map(([sym, id]) => [id, sym]),
+);
 
 function buildClient() {
   return createPublicClient({ chain: base, transport: http(config.baseRpc || undefined) });
@@ -29,6 +58,7 @@ function baseClient() {
 }
 
 interface CoinGeckoRow {
+  id: string;
   symbol: string;
   current_price: number;
   price_change_percentage_24h: number | null;
@@ -60,7 +90,7 @@ export async function coingeckoSnapshots(ts: number, symbols: string[]): Promise
   const gasGwei = await currentGasGwei();
   const out: Record<string, MarketSnapshot> = {};
   for (const row of rows) {
-    const sym = row.symbol?.toUpperCase();
+    const sym = ID_TO_SYMBOL[row.id] ?? row.symbol?.toUpperCase();
     if (!sym || typeof row.current_price !== "number") continue;
     out[sym] = {
       ts,
