@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.local.json
+test-ledger.local.json
+perpetua-ledger.local.json
+.DS_Store
