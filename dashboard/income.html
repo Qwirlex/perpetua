@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Perpetua, income</title>
+    <style>
+      :root { --bg:#0a0e16; --panel:#121826; --line:#1f2937; --text:#e6edf3; --muted:#8b98a9; --up:#3fd07f; --accent:#6ea8fe; }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+      .wrap { max-width:620px; margin:0 auto; padding:28px 18px 60px; }
+      .top { text-align:center; margin-bottom:22px; }
+      .brand { letter-spacing:.4em; color:var(--accent); font-weight:700; font-size:12px; }
+      .top h1 { font-size:18px; font-weight:600; margin:10px 0 2px; }
+      .top .sub { color:var(--muted); font-size:13px; }
+      .hero { background:var(--panel); border:1px solid #1c3b2a; border-radius:18px; padding:26px 20px; text-align:center; margin-bottom:14px; }
+      .hero .label { color:var(--muted); font-size:13px; }
+      .hero .amount { font-size:48px; font-weight:800; color:var(--up); margin:6px 0 2px; font-variant-numeric:tabular-nums; letter-spacing:-1px; }
+      .hero .amount .cur { font-size:20px; color:var(--muted); font-weight:600; margin-left:6px; }
+      .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+      .stat { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; text-align:center; }
+      .stat .n { font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; }
+      .stat .l { color:var(--muted); font-size:12px; margin-top:2px; }
+      h2 { font-size:14px; color:var(--muted); font-weight:600; margin:18px 0 10px; }
+      .sale { display:flex; justify-content:space-between; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+      .sale .who { font-size:13px; } .sale .who .mono { color:var(--muted); font-size:11px; font-family:ui-monospace,monospace; display:block; margin-top:3px; }
+      .sale a { color:var(--accent); text-decoration:none; }
+      .sale .amt { color:var(--up); font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+      .empty { color:var(--muted); text-align:center; padding:24px; font-size:14px; }
+      .foot { text-align:center; color:var(--muted); font-size:12px; margin-top:22px; }
+      .foot a { color:var(--accent); text-decoration:none; }
+      .live { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--up); margin-right:6px; vertical-align:middle; animation:pulse 2s infinite; }
+      @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div class="brand">PERPETUA</div>
+        <h1><span class="live"></span>Real income</h1>
+        <div class="sub">USDC paid by agents on Base mainnet, live</div>
+      </div>
+
+      <div class="hero">
+        <div class="label">Earned, all time</div>
+        <div class="amount"><span id="total">0.000000</span><span class="cur">USDC</span></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="n" id="count">0</div><div class="l">paid calls</div></div>
+        <div class="stat"><div class="n" id="balance">0.000000</div><div class="l">wallet balance USDC</div></div>
+      </div>
+
+      <h2>Recent sales</h2>
+      <div id="sales"><div class="empty">No sales yet, waiting for buyers.</div></div>
+
+      <div class="foot">
+        Wallet <a id="walletlink" target="_blank" rel="noopener">on BaseScan ↗</a>
+        · <a href="/">dashboard</a>
+        · <a href="https://api.tradeperpetua.xyz/docs" target="_blank" rel="noopener">buy the signals</a>
+      </div>
+    </div>
+
+    <script>
+      function usdc(micro) { return (Number(BigInt(micro || "0")) / 1e6).toLocaleString("en-US", { minimumFractionDigits: 6, maximumFractionDigits: 6 }); }
+      function el(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; }
+      function isTx(h) { return typeof h === "string" && /^0x[0-9a-f]{64}$/i.test(h); }
+
+      async function load() {
+        try {
+          const i = await (await fetch("/income")).json();
+          document.getElementById("total").textContent = usdc(i.totalMicro);
+          document.getElementById("count").textContent = String(i.count || 0);
+          document.getElementById("balance").textContent = usdc(i.balanceMicro);
+          if (i.seller) {
+            const w = document.getElementById("walletlink");
+            w.href = "https://basescan.org/address/" + i.seller;
+          }
+          const box = document.getElementById("sales");
+          const recent = i.recent || [];
+          if (recent.length === 0) {
+            box.textContent = "";
+            box.appendChild(el("div", "empty", "No sales yet, waiting for buyers."));
+            return;
+          }
+          box.textContent = "";
+          recent.forEach((s) => {
+            const row = el("div", "sale");
+            const who = el("div", "who");
+            who.appendChild(document.createTextNode("Paid call"));
+            const mono = el("span", "mono", "from " + (s.from || "").slice(0, 10) + "…");
+            if (isTx(s.tx)) {
+              const a = el("a", null, " · on chain ↗");
+              a.href = "https://basescan.org/tx/" + s.tx;
+              a.target = "_blank"; a.rel = "noopener";
+              mono.appendChild(a);
+            }
+            who.appendChild(mono);
+            row.appendChild(who);
+            row.appendChild(el("div", "amt", "+" + usdc(s.amount)));
+            box.appendChild(row);
+          });
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+      load();
+      setInterval(load, 5000);
+    </script>
+  </body>
+</html>
