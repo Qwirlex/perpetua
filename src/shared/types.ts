@@ -58,3 +58,38 @@ export interface LoopCycle {
   balanceAfter: string;
   mirrorTx?: string;
 }
+
+export interface DerivsRaw {
+  asset: string;
+  markPrice: number;
+  indexPrice: number;
+  lastFundingRate: number; // 8h funding as a decimal, e.g. 0.0001
+  openInterestBase: number; // base-unit OI from /openInterest
+  oiValNow: number | null; // sumOpenInterestValue latest (USD)
+  oiVal24hAgo: number | null; // sumOpenInterestValue ~24h ago (USD)
+  longShortRatio: number | null;
+  takerBuySellRatio: number | null;
+  priceChangePct24h: number | null;
+  ts: number;
+}
+
+export type DerivBias = "long_squeeze_risk" | "short_squeeze_risk" | "neutral";
+
+export interface DerivativeSignal {
+  asset: string;
+  markPrice: number;
+  indexPrice: number;
+  basisPct: number;
+  fundingRate8hPct: number;
+  fundingAnnualizedPct: number;
+  openInterestUsd: number;
+  oiChangePct24h: number | null;
+  longShortRatio: number | null;
+  takerBuySellRatio: number | null;
+  priceChangePct24h: number | null;
+  leverageHeat: number; // 0 to 100
+  bias: DerivBias;
+  confidence: "low" | "medium" | "high";
+  rationale: string;
+  ts: number;
+}

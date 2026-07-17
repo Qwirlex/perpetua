@@ -64,6 +64,15 @@ export const config = {
   sellerNetwork: process.env.SELLER_NETWORK ?? (process.env.PERPETUA_LIVE === "1" ? "eip155:8453" : "eip155:84532"),
   basicPrice: process.env.BASIC_PRICE ?? "$0.005",
   reportPrice: process.env.REPORT_PRICE ?? "$0.05",
+  derivativesPrice: process.env.DERIVATIVES_PRICE ?? "$0.05",
+  // Perp majors the derivatives endpoint covers (must have a Binance USDT perp).
+  perpAssets: (
+    process.env.PERP_ASSETS ??
+    "BTC,ETH,SOL,BNB,XRP,ADA,DOGE,AVAX,LINK,DOT,TRX,LTC,UNI,ATOM,NEAR,APT,ARB,OP,SUI,AAVE,INJ,POL"
+  )
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean),
   sellerPort: n(process.env.SELLER_PORT, 4055),
   sellerPublicUrl: process.env.SELLER_PUBLIC_URL ?? "https://api.tradeperpetua.xyz",
   contactEmail: process.env.CONTACT_EMAIL ?? "",

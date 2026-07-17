@@ -6,7 +6,9 @@ import { declareDiscoveryExtension, bazaarResourceServerExtension, withBazaar } 
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { config } from "../shared/config.js";
 import { buildReport } from "../research/report.js";
-import type { Signal, MarketSnapshot } from "../shared/types.js";
+import type { Signal, MarketSnapshot, DerivativeSignal } from "../shared/types.js";
+import { fetchDerivsRaw, PERP_SYMBOLS } from "../market/binanceDerivs.js";
+import { computeDerivativeSignal } from "../research/derivativeSignal.js";
 
 // The real earn surface. Two paid routes on the official x402 v2 stack, settled by the
 // Coinbase CDP facilitator on Base, so real outside agents discover and pay in USDC and
@@ -70,6 +72,53 @@ const REPORT_OUTPUT = {
     },
   },
 };
+
+const DERIV_INPUT_SCHEMA = {
+  properties: {
+    asset: {
+      type: "string",
+      enum: config.perpAssets,
+      default: "BTC",
+      description: `Perp asset symbol, one of ${config.perpAssets.join(", ")}`,
+    },
+  },
+};
+
+const DERIV_OUTPUT = {
+  example: {
+    asset: "BTC", markPrice: 61240.5, indexPrice: 61210, basisPct: 0.05,
+    fundingRate8hPct: 0.01, fundingAnnualizedPct: 10.95, openInterestUsd: 8123456789,
+    oiChangePct24h: 4.2, longShortRatio: 1.42, takerBuySellRatio: 1.08, priceChangePct24h: 2.1,
+    leverageHeat: 38, bias: "long_squeeze_risk", confidence: "high",
+    rationale: "Longs crowded (L/S 1.42) paying 10.9% ann funding; elevated long-squeeze risk.",
+  },
+  schema: {
+    type: "object",
+    properties: {
+      asset: { type: "string" }, markPrice: { type: "number" }, indexPrice: { type: "number" },
+      basisPct: { type: "number" }, fundingRate8hPct: { type: "number" }, fundingAnnualizedPct: { type: "number" },
+      openInterestUsd: { type: "number" }, oiChangePct24h: { type: "number" },
+      longShortRatio: { type: "number" }, takerBuySellRatio: { type: "number" }, priceChangePct24h: { type: "number" },
+      leverageHeat: { type: "number", description: "0 to 100 leverage/fragility heat" },
+      bias: { type: "string", enum: ["long_squeeze_risk", "short_squeeze_risk", "neutral"] },
+      confidence: { type: "string", enum: ["low", "medium", "high"] },
+      rationale: { type: "string" },
+    },
+  },
+};
+
+// Per-symbol TTL cache so repeated derivative calls are fast and Binance-friendly.
+const DERIV_TTL_MS = 45_000;
+const derivCache = new Map<string, { ts: number; value: DerivativeSignal }>();
+async function getDerivSignal(asset: string): Promise<DerivativeSignal> {
+  const now = Date.now();
+  const hit = derivCache.get(asset);
+  if (hit && now - hit.ts < DERIV_TTL_MS) return hit.value;
+  const raw = await fetchDerivsRaw(asset, Math.floor(now / 1000));
+  const value = computeDerivativeSignal(raw);
+  derivCache.set(asset, { ts: now, value });
+  return value;
+}
 
 export async function createSellerApp(payTo: string, latest: LatestState) {
   // Facilitator selection. A configured URL such as the PayAI facilitator wins, it needs
@@ -151,6 +200,20 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
             }),
           },
         },
+        "GET /derivatives": {
+          accepts: { scheme: "exact", price: config.derivativesPrice, network, payTo },
+          serviceName: "Perpetua derivatives leverage signal",
+          description:
+            "Perp derivatives leverage/squeeze signal: funding (8h + annualized), open interest and 24h change, long/short crowding, taker flow, basis, and a 0 to 100 leverage-heat score with a bias call and rationale. Binance Futures data.",
+          tags: [...TAGS, "derivatives", "perps", "funding", "open-interest", "liquidations"],
+          extensions: {
+            ...declareDiscoveryExtension({
+              input: { asset: "BTC" },
+              inputSchema: DERIV_INPUT_SCHEMA,
+              output: DERIV_OUTPUT,
+            }),
+          },
+        },
       },
       resourceServer,
     ),
@@ -191,6 +254,20 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     res.json(await buildReport(a.signal, a.snapshot));
   });
 
+  // Paid, the premium derivatives leverage signal, computed on demand from Binance Futures.
+  app.get("/derivatives", async (_req, res) => {
+    const raw = (_req.query.asset as string | undefined)?.toUpperCase() || "BTC";
+    if (!PERP_SYMBOLS[raw]) {
+      res.status(400).json({ error: `asset has no perp market, supported ${config.perpAssets.join(", ")}` });
+      return;
+    }
+    try {
+      res.json(await getDerivSignal(raw));
+    } catch {
+      res.status(502).json({ error: "derivatives source unavailable" });
+    }
+  });
+
   // USDC contract per network, used in the discovery document.
   const USDC_BY_NETWORK: Record<string, string> = {
     "eip155:8453": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -227,6 +304,7 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     items: [
       item("/signal", config.basicPrice, "Crypto risk signal, a 0 to 100 risk score plus trend and an on chain anomaly flag with a short rationale."),
       item("/report", config.reportPrice, "Enriched crypto risk report, a weighted factor breakdown plus a written analysis and a confidence label."),
+      item("/derivatives", config.derivativesPrice, "Perp derivatives leverage/squeeze signal, funding, open interest and 24h change, long/short crowding, basis, and a 0 to 100 leverage heat score with a bias call."),
     ],
   };
   app.get("/.well-known/x402", (_req, res) => res.json(discovery));
@@ -234,7 +312,7 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
 
   // OpenAPI spec. x402scan reads this to learn the input schema and the 402 payment
   // info, which is how it registers a resource. Facilitator independent.
-  function operation(price: string, summary: string, outSchema: Record<string, unknown>) {
+  function operation(price: string, summary: string, outSchema: Record<string, unknown>, assetEnum: string[] = config.assets) {
     return {
       operationId: summary.replace(/\s+/g, "_").toLowerCase(),
       summary,
@@ -243,8 +321,8 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           name: "asset",
           in: "query",
           required: false,
-          description: `Asset symbol, one of ${config.assets.join(", ")}`,
-          schema: { type: "string", enum: config.assets, default: config.asset },
+          description: `Asset symbol, one of ${assetEnum.join(", ")}`,
+          schema: { type: "string", enum: assetEnum, default: assetEnum[0] },
         },
       ],
       responses: {
@@ -270,6 +348,7 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     paths: {
       "/signal": { get: operation(config.basicPrice, "Crypto risk signal", SIGNAL_OUTPUT.schema) },
       "/report": { get: operation(config.reportPrice, "Enriched crypto risk report", REPORT_OUTPUT.schema) },
+      "/derivatives": { get: operation(config.derivativesPrice, "Derivatives leverage signal", DERIV_OUTPUT.schema, config.perpAssets) },
     },
   };
   app.get("/openapi.json", (_req, res) => res.json(openapi));
@@ -300,6 +379,7 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
       products: [
         { resource: "/signal", price: config.basicPrice, description: "Risk score, trend, anomaly, rationale." },
         { resource: "/report", price: config.reportPrice, description: "Factor breakdown plus written analysis and confidence." },
+        { resource: "/derivatives", price: config.derivativesPrice, description: "Perp leverage/squeeze signal: funding, OI, crowding, basis, 0-100 heat, bias." },
       ],
     });
   });
@@ -330,6 +410,7 @@ table{width:100%;border-collapse:collapse;margin:10px 0} td,th{border:1px solid 
 <tr><th>Resource</th><th>Price</th><th>What you get</th></tr>
 <tr><td><code>GET ${base}/signal</code></td><td class="price">${basicPrice}</td><td>Risk score 0 to 100, trend, on chain anomaly flag, one line rationale.</td></tr>
 <tr><td><code>GET ${base}/report</code></td><td class="price">${reportPrice}</td><td>Weighted factor breakdown, written analysis, confidence label.</td></tr>
+<tr><td><code>GET ${base}/derivatives</code></td><td class="price">${config.derivativesPrice}</td><td>Perp leverage/squeeze signal: funding, open interest, crowding, basis, 0-100 heat, bias call.</td></tr>
 </table>
 <p class="muted">Network ${network}, asset USDC. Payments settle on chain.</p>
 <h2>Pay with an x402 client</h2>
