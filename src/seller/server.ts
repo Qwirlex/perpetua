@@ -7,7 +7,8 @@ import { createFacilitatorConfig } from "@coinbase/x402";
 import { config } from "../shared/config.js";
 import { buildReport } from "../research/report.js";
 import type { Signal, MarketSnapshot, DerivativeSignal } from "../shared/types.js";
-import { fetchDerivsRaw, PERP_SYMBOLS } from "../market/binanceDerivs.js";
+import { PERP_SYMBOLS } from "../market/binanceDerivs.js";
+import { fetchDerivsRawAuto } from "../market/derivsSource.js";
 import { computeDerivativeSignal } from "../research/derivativeSignal.js";
 
 // The real earn surface. Two paid routes on the official x402 v2 stack, settled by the
@@ -114,7 +115,7 @@ async function getDerivSignal(asset: string): Promise<DerivativeSignal> {
   const now = Date.now();
   const hit = derivCache.get(asset);
   if (hit && now - hit.ts < DERIV_TTL_MS) return hit.value;
-  const raw = await fetchDerivsRaw(asset, Math.floor(now / 1000));
+  const raw = await fetchDerivsRawAuto(asset, Math.floor(now / 1000));
   const value = computeDerivativeSignal(raw);
   derivCache.set(asset, { ts: now, value });
   return value;
