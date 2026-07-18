@@ -6,10 +6,12 @@ import { declareDiscoveryExtension, bazaarResourceServerExtension, withBazaar } 
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { config } from "../shared/config.js";
 import { buildReport } from "../research/report.js";
-import type { Signal, MarketSnapshot, DerivativeSignal } from "../shared/types.js";
+import type { Signal, MarketSnapshot, DerivativeSignal, WhaleSignal } from "../shared/types.js";
 import { PERP_SYMBOLS } from "../market/binanceDerivs.js";
 import { fetchDerivsRawAuto } from "../market/derivsSource.js";
 import { computeDerivativeSignal } from "../research/derivativeSignal.js";
+import { fetchWalletRaw, WALLET_CHAINS, ADDRESS_RE } from "../market/blockscoutWallet.js";
+import { computeWhaleSignal } from "../research/whaleSignal.js";
 
 // The real earn surface. Two paid routes on the official x402 v2 stack, settled by the
 // Coinbase CDP facilitator on Base, so real outside agents discover and pay in USDC and
@@ -107,6 +109,66 @@ const DERIV_OUTPUT = {
     },
   },
 };
+
+const WHALE_INPUT_SCHEMA = {
+  properties: {
+    address: {
+      type: "string",
+      pattern: "^0x[0-9a-fA-F]{40}$",
+      description: "EVM wallet address to score",
+    },
+    chain: {
+      type: "string",
+      enum: Object.keys(WALLET_CHAINS),
+      default: "base",
+      description: `Chain, one of ${Object.keys(WALLET_CHAINS).join(", ")}`,
+    },
+  },
+  required: ["address"],
+};
+
+const WHALE_OUTPUT = {
+  example: {
+    address: "0xf977814e90da44bfa03b6295a0616a897441acec", chain: "base", isContract: false,
+    totalUsd: 57714130, nativeUsd: 55210000, tokenUsd: 2504130,
+    topHoldings: [{ symbol: "USDC", usd: 2500000 }], tier: "humpback", whaleScore: 92,
+    txCount: 667, tokenTransfersCount: 37281929,
+    inflowUsd24h: 1200000, outflowUsd24h: 3680, netflowUsd24h: 1196320, largestMoveUsd24h: 1200000,
+    activeLast24h: true, flags: ["high_velocity", "accumulating"], confidence: "high",
+    rationale: "Humpback wallet ($57.7M) on base, 667 txs, 24h netflow $1.2M over 2 moves, largest $1.2M. Accumulating.",
+  },
+  schema: {
+    type: "object",
+    properties: {
+      address: { type: "string" }, chain: { type: "string" }, isContract: { type: "boolean" },
+      totalUsd: { type: "number" }, nativeUsd: { type: "number" }, tokenUsd: { type: "number" },
+      topHoldings: { type: "array" },
+      tier: { type: "string", enum: ["shrimp", "fish", "dolphin", "whale", "humpback"] },
+      whaleScore: { type: "number", description: "0 to 100 whale size/activity score" },
+      txCount: { type: "number" }, tokenTransfersCount: { type: "number" },
+      inflowUsd24h: { type: "number" }, outflowUsd24h: { type: "number" },
+      netflowUsd24h: { type: "number" }, largestMoveUsd24h: { type: "number" },
+      activeLast24h: { type: "boolean" }, flags: { type: "array" },
+      confidence: { type: "string", enum: ["low", "medium", "high"] },
+      rationale: { type: "string" },
+    },
+  },
+};
+
+// Per-address TTL cache. Wallet state moves slower than perp metrics, and a whale
+// wallet can hold thousands of token rows, so cache a bit longer.
+const WHALE_TTL_MS = 120_000;
+const whaleCache = new Map<string, { ts: number; value: WhaleSignal }>();
+async function getWhaleSignal(address: string, chain: string): Promise<WhaleSignal> {
+  const key = `${chain}:${address.toLowerCase()}`;
+  const now = Date.now();
+  const hit = whaleCache.get(key);
+  if (hit && now - hit.ts < WHALE_TTL_MS) return hit.value;
+  const raw = await fetchWalletRaw(address, chain, Math.floor(now / 1000));
+  const value = computeWhaleSignal(raw);
+  whaleCache.set(key, { ts: now, value });
+  return value;
+}
 
 // Per-symbol TTL cache so repeated derivative calls are fast and Binance-friendly.
 const DERIV_TTL_MS = 45_000;
@@ -215,6 +277,20 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
             }),
           },
         },
+        "GET /whale": {
+          accepts: { scheme: "exact", price: config.whalePrice, network, payTo },
+          serviceName: "Perpetua whale wallet score",
+          description:
+            "Whale intelligence for any EVM wallet: total USD size (native + priced tokens), tier, 0 to 100 whale score, 24h in/out/netflow, largest move, activity flags (accumulating, distributing, fresh, high-velocity) and a plain rationale. Base and Ethereum.",
+          tags: [...TAGS, "whale", "wallet", "smart-money", "portfolio", "on-chain", "netflow"],
+          extensions: {
+            ...declareDiscoveryExtension({
+              input: { address: "0xF977814e90dA44bFA03b6295A0616a897441aceC", chain: "base" },
+              inputSchema: WHALE_INPUT_SCHEMA,
+              output: WHALE_OUTPUT,
+            }),
+          },
+        },
       },
       resourceServer,
     ),
@@ -269,6 +345,25 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     }
   });
 
+  // Paid, the whale wallet score, computed on demand from Blockscout.
+  app.get("/whale", async (_req, res) => {
+    const address = (_req.query.address as string | undefined) ?? "";
+    const chain = ((_req.query.chain as string | undefined) ?? "base").toLowerCase();
+    if (!ADDRESS_RE.test(address)) {
+      res.status(400).json({ error: "address must be a 0x-prefixed 40-hex EVM address" });
+      return;
+    }
+    if (!WALLET_CHAINS[chain]) {
+      res.status(400).json({ error: `chain not covered, supported ${Object.keys(WALLET_CHAINS).join(", ")}` });
+      return;
+    }
+    try {
+      res.json(await getWhaleSignal(address, chain));
+    } catch {
+      res.status(502).json({ error: "wallet source unavailable" });
+    }
+  });
+
   // USDC contract per network, used in the discovery document.
   const USDC_BY_NETWORK: Record<string, string> = {
     "eip155:8453": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -306,6 +401,7 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
       item("/signal", config.basicPrice, "Crypto risk signal, a 0 to 100 risk score plus trend and an on chain anomaly flag with a short rationale."),
       item("/report", config.reportPrice, "Enriched crypto risk report, a weighted factor breakdown plus a written analysis and a confidence label."),
       item("/derivatives", config.derivativesPrice, "Perp derivatives leverage/squeeze signal, funding, open interest and 24h change, long/short crowding, basis, and a 0 to 100 leverage heat score with a bias call."),
+      item("/whale", config.whalePrice, "Whale intelligence for any EVM wallet, total USD size, tier, 0 to 100 whale score, 24h netflow and largest move, activity flags, Base and Ethereum."),
     ],
   };
   app.get("/.well-known/x402", (_req, res) => res.json(discovery));
@@ -350,6 +446,37 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
       "/signal": { get: operation(config.basicPrice, "Crypto risk signal", SIGNAL_OUTPUT.schema) },
       "/report": { get: operation(config.reportPrice, "Enriched crypto risk report", REPORT_OUTPUT.schema) },
       "/derivatives": { get: operation(config.derivativesPrice, "Derivatives leverage signal", DERIV_OUTPUT.schema, config.perpAssets) },
+      "/whale": {
+        get: {
+          operationId: "whale_wallet_score",
+          summary: "Whale wallet score",
+          parameters: [
+            {
+              name: "address",
+              in: "query",
+              required: true,
+              description: "EVM wallet address to score",
+              schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" },
+            },
+            {
+              name: "chain",
+              in: "query",
+              required: false,
+              description: `Chain, one of ${Object.keys(WALLET_CHAINS).join(", ")}`,
+              schema: { type: "string", enum: Object.keys(WALLET_CHAINS), default: "base" },
+            },
+          ],
+          responses: {
+            "200": { description: "Whale wallet score", content: { "application/json": { schema: WHALE_OUTPUT.schema } } },
+            "402": { description: "Payment required, pay per call in USDC over x402" },
+          },
+          "x-x402": {
+            accepts: [
+              { scheme: "exact", network, maxAmountRequired: priceToAmount(config.whalePrice), asset: usdc, payTo, extra: { name: "USD Coin", version: "2" } },
+            ],
+          },
+        },
+      },
     },
   };
   app.get("/openapi.json", (_req, res) => res.json(openapi));
@@ -381,6 +508,7 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
         { resource: "/signal", price: config.basicPrice, description: "Risk score, trend, anomaly, rationale." },
         { resource: "/report", price: config.reportPrice, description: "Factor breakdown plus written analysis and confidence." },
         { resource: "/derivatives", price: config.derivativesPrice, description: "Perp leverage/squeeze signal: funding, OI, crowding, basis, 0-100 heat, bias." },
+        { resource: "/whale", price: config.whalePrice, description: "Whale wallet score: USD size, tier, 24h netflow, flags. Base and Ethereum." },
       ],
     });
   });
@@ -412,6 +540,7 @@ table{width:100%;border-collapse:collapse;margin:10px 0} td,th{border:1px solid 
 <tr><td><code>GET ${base}/signal</code></td><td class="price">${basicPrice}</td><td>Risk score 0 to 100, trend, on chain anomaly flag, one line rationale.</td></tr>
 <tr><td><code>GET ${base}/report</code></td><td class="price">${reportPrice}</td><td>Weighted factor breakdown, written analysis, confidence label.</td></tr>
 <tr><td><code>GET ${base}/derivatives</code></td><td class="price">${config.derivativesPrice}</td><td>Perp leverage/squeeze signal: funding, open interest, crowding, basis, 0-100 heat, bias call.</td></tr>
+<tr><td><code>GET ${base}/whale?address=0x...</code></td><td class="price">${config.whalePrice}</td><td>Whale wallet score: USD size, tier, 0-100 score, 24h netflow, largest move, flags. Base and Ethereum.</td></tr>
 </table>
 <p class="muted">Network ${network}, asset USDC. Payments settle on chain.</p>
 <h2>Pay with an x402 client</h2>

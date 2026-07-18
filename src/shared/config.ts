@@ -65,6 +65,7 @@ export const config = {
   basicPrice: process.env.BASIC_PRICE ?? "$0.005",
   reportPrice: process.env.REPORT_PRICE ?? "$0.05",
   derivativesPrice: process.env.DERIVATIVES_PRICE ?? "$0.05",
+  whalePrice: process.env.WHALE_PRICE ?? "$0.05",
   // Perp majors the derivatives endpoint covers (must have a Binance USDT perp).
   perpAssets: (
     process.env.PERP_ASSETS ??

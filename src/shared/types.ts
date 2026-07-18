@@ -93,3 +93,49 @@ export interface DerivativeSignal {
   rationale: string;
   ts: number;
 }
+
+export interface WalletRaw {
+  address: string;
+  chain: string; // base | ethereum
+  isContract: boolean;
+  nativeBalance: number; // native units, e.g. ETH
+  nativeUsd: number | null;
+  txCount: number | null;
+  tokenTransfersCount: number | null;
+  // Priced ERC-20 holdings with an ok reputation, USD value each. Scam and unpriced
+  // tokens are excluded so a dust airdrop cannot inflate the wallet size.
+  holdings: { symbol: string; usd: number }[];
+  recentTransfers: {
+    ts: number;
+    direction: "in" | "out";
+    usd: number | null;
+    symbol: string;
+    counterpartyContract: boolean;
+  }[];
+  ts: number;
+}
+
+export type WhaleTier = "shrimp" | "fish" | "dolphin" | "whale" | "humpback";
+
+export interface WhaleSignal {
+  address: string;
+  chain: string;
+  isContract: boolean;
+  totalUsd: number;
+  nativeUsd: number | null;
+  tokenUsd: number;
+  topHoldings: { symbol: string; usd: number }[];
+  tier: WhaleTier;
+  whaleScore: number; // 0 to 100
+  txCount: number | null;
+  tokenTransfersCount: number | null;
+  inflowUsd24h: number | null;
+  outflowUsd24h: number | null;
+  netflowUsd24h: number | null;
+  largestMoveUsd24h: number | null;
+  activeLast24h: boolean;
+  flags: string[];
+  confidence: "low" | "medium" | "high";
+  rationale: string;
+  ts: number;
+}
