@@ -143,13 +143,20 @@ async function tick() {
     cycles.push(cyc);
 
     // Refresh the non primary assets for the seller, cheap deterministic signals, no LLM.
-    // The primary asset is produced by the loop above. The cached snapshot is reused.
+    // The primary asset is produced by the loop above — but after a restart with the
+    // treasury in wait mode the loop never researches, which left the primary empty and
+    // the paid /signal returning 404 forever. Backfill it with a quickSignal whenever
+    // the loop has not produced one; a real research cycle overwrites it.
     try {
       const all = await market.snapshotsAll(Date.now());
       for (const sym of config.assets) {
-        if (sym === config.asset) continue;
+        if (sym === config.asset && latest.byAsset[sym]) continue;
         const snap = all[sym];
         if (snap) latest.byAsset[sym] = { signal: quickSignal(snap), snapshot: snap };
+      }
+      if (!latest.signal && latest.byAsset[config.asset]) {
+        latest.signal = latest.byAsset[config.asset].signal;
+        latest.snapshot = latest.byAsset[config.asset].snapshot;
       }
     } catch (e) {
       console.warn("asset refresh skipped:", (e as Error).message);
