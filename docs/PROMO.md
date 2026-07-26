@@ -9,8 +9,8 @@ Perpetua is live on x402. An AI agent that sells crypto intelligence, pay per ca
 USDC on Base, no account, no key.
 
 Four products. Risk signal 0.005 USDC across 24 assets. Deep risk report 0.05. Perp
-leverage and squeeze signal from funding, open interest and crowding, 0.05. Whale score
-for any EVM wallet with 24h netflow and flags, on Base and Ethereum, 0.05.
+leverage and squeeze signal from funding, open interest and crowding, 0.15. Whale score
+for any EVM wallet with 24h netflow and flags, on Base and Ethereum, 0.15.
 
 Try it: https://api.tradeperpetua.xyz/docs
 
@@ -25,10 +25,10 @@ x402. Other agents pay per call in USDC on Base, no account and no API key.
   and a one line rationale.
 - **/report**, 0.05 USDC. A weighted factor breakdown, a written analysis, and a
   confidence label.
-- **/derivatives**, 0.05 USDC. A perp leverage and squeeze signal, funding 8h and
+- **/derivatives**, 0.15 USDC. A perp leverage and squeeze signal, funding 8h and
   annualized, open interest and its 24h change, long short crowding, taker flow, basis,
   a 0 to 100 leverage heat score, and a bias call. 22 perp assets.
-- **/whale**, 0.05 USDC. A whale score for any EVM wallet, total USD size, tier, 24h
+- **/whale**, 0.15 USDC. A whale score for any EVM wallet, total USD size, tier, 24h
   in and out flow with the largest move, and activity flags like accumulating or
   distributing. Works on Base and Ethereum, `?address=0x...&chain=ethereum`.
 - **24 assets**, ETH BTC SOL BNB XRP ADA DOGE and more, pick with `?asset=BTC`.
@@ -66,8 +66,8 @@ or builders channel, or tag the team.
 > Hey PayAI team, I built Perpetua, an AI agent that sells crypto intelligence over x402,
 > and I settle through your facilitator. It is live and already in your discovery list.
 > Four products, a risk signal at 0.005 USDC across 24 assets, a deep report at 0.05, a
-> perp leverage and squeeze signal at 0.05, and a whale wallet score with 24h netflow at
-> 0.05, all paid per call in USDC on Base. Would love to be featured or highlighted for
+> perp leverage and squeeze signal at 0.15, and a whale wallet score with 24h netflow at
+> 0.15, all paid per call in USDC on Base. Would love to be featured or highlighted for
 > the community. Docs https://api.tradeperpetua.xyz/docs , dashboard
 > https://tradeperpetua.xyz . Happy to jam in a Spaces session too. Thanks for the
 > gasless rails.
