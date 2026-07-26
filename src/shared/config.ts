@@ -66,6 +66,14 @@ export const config = {
   reportPrice: process.env.REPORT_PRICE ?? "$0.05",
   derivativesPrice: process.env.DERIVATIVES_PRICE ?? "$0.15",
   whalePrice: process.env.WHALE_PRICE ?? "$0.15",
+  // The two audit tiers. A quick verdict a stranger will risk money on, and the
+  // full audit that is the actual product.
+  scanPrice: process.env.SCAN_PRICE ?? "$5",
+  auditPrice: process.env.AUDIT_PRICE ?? "$10",
+  // The Aegis engine runs on the same host and is never exposed publicly.
+  aegisEngineUrl: process.env.AEGIS_ENGINE_URL ?? "http://127.0.0.1:8731",
+  auditReportBase: process.env.AUDIT_REPORT_BASE ?? "https://aegiscan.xyz",
+  auditEtaSeconds: n(process.env.AUDIT_ETA_SECONDS, 180),
   // Perp majors the derivatives endpoint covers (must have a Binance USDT perp).
   perpAssets: (
     process.env.PERP_ASSETS ??
