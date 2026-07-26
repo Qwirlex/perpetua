@@ -171,8 +171,10 @@ and Gemini. The Perpetua seller stays a thin paid gateway and never runs analysi
 8. **Assemble.** Executive summary in plain language, findings sorted by severity, the
    privileged powers table, a coverage table naming both what ran and what was not
    checked, target metadata, and integrity fields. `reportHash` is keccak256 over the
-   canonical JSON with the signature fields removed, `reportSignature` is that hash signed
-   by a service key, and the matching public key is published so anyone can verify.
+   canonical JSON with the signature fields removed, `report_signature` is that hash signed
+   by a dedicated service key, and `signer` is the address recovered from it. An Ethereum style
+   signature is used rather than a hosted public key file, because anyone can recover the signer
+   from the hash with standard tooling and there is nothing extra to host or rotate.
 
 The quick scan tier runs steps 1, 2, 3 and a single triage pass, then scores. No lenses,
 no refutation, no report page.
@@ -207,7 +209,7 @@ Report
   summary
   findings[], privilegedPowers[], coverage
   generatedAt, durationMs
-  reportHash, reportSignature, publicKeyUrl
+  reportHash, reportSignature, signer
 ```
 
 ## Job store
@@ -258,9 +260,9 @@ New env on the Perpetua seller, all with defaults so a deploy needs no manual st
 `SCAN_PRICE` default `$5`, `AUDIT_PRICE` default `$10`, `AEGIS_ENGINE_URL` default
 `http://127.0.0.1:8731`, `AUDIT_REPORT_BASE` default `https://aegiscan.xyz`.
 
-New env on the Aegis engine: `AUDIT_JOB_DIR`, `AUDIT_JOB_TTL_DAYS`, `AUDIT_LENSES` so a
-lens can be disabled without a code change, `REPORT_SIGNING_KEY` and the matching
-`REPORT_PUBLIC_KEY_URL`. The Etherscan V2 key and the Gemini ADC path already exist.
+New env on the Aegis engine: `AUDIT_JOB_DIR`, `AUDIT_JOB_TTL_DAYS`, `AUDIT_REPORT_DIR` pointing
+at the same directory the web app reads, and `REPORT_SIGNING_KEY`, a dedicated key that holds no
+funds and only signs reports. The Etherscan V2 key and the Gemini ADC path already exist.
 
 ## Testing
 
