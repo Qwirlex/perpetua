@@ -12,6 +12,16 @@ import { fetchDerivsRawAuto } from "../market/derivsSource.js";
 import { computeDerivativeSignal } from "../research/derivativeSignal.js";
 import { fetchWalletRaw, WALLET_CHAINS, ADDRESS_RE } from "../market/blockscoutWallet.js";
 import { computeWhaleSignal } from "../research/whaleSignal.js";
+import {
+  AUDIT_CHAINS,
+  buildJobHandle,
+  createAuditJob,
+  getAuditJob,
+  mapEngineError,
+  retryAuditJob,
+  runScan,
+} from "../market/aegisEngine.js";
+import { validateAuditInput } from "./auditInput.js";
 
 // The real earn surface. Two paid routes on the official x402 v2 stack, settled by the
 // Coinbase CDP facilitator on Base, so real outside agents discover and pay in USDC and
@@ -183,6 +193,85 @@ async function getDerivSignal(asset: string): Promise<DerivativeSignal> {
   return value;
 }
 
+const AUDIT_INPUT_SCHEMA = {
+  properties: {
+    address: {
+      type: "string",
+      pattern: "^0x[0-9a-fA-F]{40}$",
+      description: "Deployed contract address to audit",
+    },
+    chain: {
+      type: "string",
+      enum: [...AUDIT_CHAINS],
+      default: "base",
+      description: `Chain, one of ${AUDIT_CHAINS.join(", ")}`,
+    },
+  },
+  required: ["address"],
+};
+
+const SCAN_OUTPUT = {
+  example: {
+    tier: "scan", verdict: "caution", risk_score: 20, confidence: "medium",
+    summary: "The contract is a simple vault with one owner controlled path.",
+    findings: [{
+      id: "F-1", severity: "medium", title: "Owner can change the fee with no limit",
+      location: "Vault.sol:88",
+    }],
+  },
+  schema: {
+    type: "object",
+    properties: {
+      tier: { type: "string", enum: ["scan"] },
+      verdict: { type: "string", enum: ["critical_risk", "high_risk", "caution", "looks_ok"] },
+      risk_score: { type: "number", description: "0 to 100, capped per severity band" },
+      confidence: { type: "string", enum: ["high", "medium", "low"] },
+      summary: { type: "string" },
+      findings: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            severity: { type: "string", enum: ["critical", "high", "medium", "low", "info"] },
+            title: { type: "string" },
+            location: { type: "string", description: "File.sol:LINE" },
+          },
+        },
+      },
+    },
+  },
+};
+
+const AUDIT_OUTPUT = {
+  example: {
+    job_id: "a3f19c2b7d84", state: "running",
+    status_url: "https://api.tradeperpetua.xyz/audit/status?job=a3f19c2b7d84",
+    report_url: "https://aegiscan.xyz/audit/a3f19c2b7d84",
+    eta_seconds: 180,
+    target: { address: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb", chain: "base", contractName: "Dai", compiler: "0.5.12" },
+  },
+  schema: {
+    type: "object",
+    properties: {
+      job_id: { type: "string", description: "12 hex characters, use it on the free status route" },
+      state: { type: "string", enum: ["queued", "running", "done", "failed"] },
+      status_url: { type: "string", description: "Free route that returns progress and the report" },
+      report_url: { type: "string", description: "Human readable report page" },
+      eta_seconds: { type: "number" },
+      target: {
+        type: "object",
+        properties: {
+          address: { type: "string" }, chain: { type: "string" },
+          contractName: { type: "string" }, compiler: { type: "string" },
+        },
+      },
+    },
+  },
+};
+
+const AUDIT_TAGS = [...TAGS, "audit", "security", "solidity", "smart-contract", "vulnerability"];
+
 export async function createSellerApp(payTo: string, latest: LatestState) {
   // Facilitator selection. A configured URL such as the PayAI facilitator wins, it needs
   // no KYB and covers gas. Otherwise CDP if creds are present, else the public testnet one.
@@ -221,6 +310,9 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
   // Behind Caddy, trust the proxy so the request protocol is https. This makes the
   // resource url in the 402 and in facilitator discovery listings https, not http.
   app.set("trust proxy", true);
+  // The audit routes also take a pasted contract in the body, for code that is
+  // not deployed or not verified. 1 MB is far more than any single contract.
+  app.use(express.json({ limit: "1mb" }));
 
   app.use(
     paymentMiddleware(
@@ -290,6 +382,48 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
               output: WHALE_OUTPUT,
             }),
           },
+        },
+        "GET /scan": {
+          accepts: { scheme: "exact", price: config.scanPrice, network, payTo },
+          serviceName: "Aegis smart contract quick scan",
+          description:
+            "Fast security verdict for a deployed contract on Base, Ethereum, Arbitrum, Optimism, Polygon or BSC. Static analysis plus one reasoning pass returns a 0 to 100 risk score, a verdict and up to five findings, each with a file and a line. Nothing is charged when the source is unverified or does not compile.",
+          tags: AUDIT_TAGS,
+          extensions: {
+            ...declareDiscoveryExtension({
+              input: { address: "0x4200000000000000000000000000000000000006", chain: "base" },
+              inputSchema: AUDIT_INPUT_SCHEMA,
+              output: SCAN_OUTPUT,
+            }),
+          },
+        },
+        "GET /audit": {
+          accepts: { scheme: "exact", price: config.auditPrice, network, payTo },
+          serviceName: "Aegis smart contract full audit",
+          description:
+            "Full contract audit across six focused lenses, access control, reentrancy and state order, arithmetic, economics and oracles, upgradeability, and token rug vectors. Every finding is then challenged by an adversarial pass that tries to refute it, so what ships is only what survived. Returns a job id at once, then a signed report with exploit scenarios, a table of what the owner can do, and a list of what was not checked.",
+          tags: AUDIT_TAGS,
+          extensions: {
+            ...declareDiscoveryExtension({
+              input: { address: "0x4200000000000000000000000000000000000006", chain: "base" },
+              inputSchema: AUDIT_INPUT_SCHEMA,
+              output: AUDIT_OUTPUT,
+            }),
+          },
+        },
+        "POST /scan": {
+          accepts: { scheme: "exact", price: config.scanPrice, network, payTo },
+          serviceName: "Aegis smart contract quick scan, pasted source",
+          description:
+            "Fast security verdict for Solidity source pasted in the body, for code that is not deployed or not verified. Same output as the address form. Nothing is charged when the source does not compile.",
+          tags: AUDIT_TAGS,
+        },
+        "POST /audit": {
+          accepts: { scheme: "exact", price: config.auditPrice, network, payTo },
+          serviceName: "Aegis smart contract full audit, pasted source",
+          description:
+            "Full six lens audit with the adversarial refutation pass for Solidity source pasted in the body. Returns a job id at once and a signed report. Nothing is charged when the source does not compile.",
+          tags: AUDIT_TAGS,
         },
       },
       resourceServer,
@@ -364,6 +498,93 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     }
   });
 
+  // Paid, the audit tiers. The engine resolves, compiles and runs static analysis
+  // before it answers, so a 200 here means real work is already done or under way,
+  // and every failure path below is a non 2xx, which the x402 middleware never
+  // settles. That is what makes it safe to sell an audit of a contract we have
+  // not seen yet.
+  async function handleScan(q: { address?: string; chain?: string; source?: string },
+                            res: express.Response) {
+    const v = validateAuditInput(q);
+    if (!v.ok) {
+      res.status(v.status).json({ error: v.error });
+      return;
+    }
+    const out = await runScan(v.input);
+    if (out.status !== 200) {
+      const m = mapEngineError(out.status, out.json);
+      res.status(m.status).json(m.body);
+      return;
+    }
+    res.json(out.json);
+  }
+
+  async function handleAudit(q: { address?: string; chain?: string; source?: string },
+                             res: express.Response) {
+    const v = validateAuditInput(q);
+    if (!v.ok) {
+      res.status(v.status).json({ error: v.error });
+      return;
+    }
+    const out = await createAuditJob(v.input);
+    if (out.status !== 200) {
+      const m = mapEngineError(out.status, out.json);
+      res.status(m.status).json(m.body);
+      return;
+    }
+    const handle = buildJobHandle(out.json as never, {
+      apiBase: config.sellerPublicUrl,
+      reportBase: config.auditReportBase,
+      etaSeconds: config.auditEtaSeconds,
+    });
+    res.json({
+      job_id: handle.jobId, state: handle.state, status_url: handle.statusUrl,
+      report_url: handle.reportUrl, eta_seconds: handle.etaSeconds, target: handle.target,
+    });
+  }
+
+  app.get("/scan", (req, res) =>
+    handleScan({ address: req.query.address as string, chain: req.query.chain as string }, res));
+  app.post("/scan", (req, res) => handleScan({ source: (req.body ?? {}).source }, res));
+
+  app.get("/audit", (req, res) =>
+    handleAudit({ address: req.query.address as string, chain: req.query.chain as string }, res));
+  app.post("/audit", (req, res) => handleAudit({ source: (req.body ?? {}).source }, res));
+
+  // Free, the job status. Deliberately not in the payment middleware map, a buyer
+  // who already paid must never pay again to collect what they bought.
+  app.get("/audit/status", async (req, res) => {
+    const job = String(req.query.job ?? "");
+    const out = await getAuditJob(job);
+    if (out.status !== 200) {
+      const m = mapEngineError(out.status, out.json);
+      res.status(m.status).json(m.body);
+      return;
+    }
+    const j = out.json as Record<string, unknown>;
+    const report = j.report as Record<string, unknown> | null;
+    const degraded = report?.status === "degraded";
+    const canRetry = (j.state === "failed" || degraded) && Number(j.retries_left ?? 0) > 0;
+    res.json({
+      job_id: j.id, state: j.state, progress: j.progress, report, reason: j.reason, degraded,
+      report_url: `${config.auditReportBase.replace(/\/$/, "")}/audit/${job}`,
+      retry_url: canRetry
+        ? `${config.sellerPublicUrl.replace(/\/$/, "")}/audit/retry?job=${job}`
+        : null,
+    });
+  });
+
+  // Free, the one time rerun of a job that failed after the buyer was charged.
+  app.get("/audit/retry", async (req, res) => {
+    const out = await retryAuditJob(String(req.query.job ?? ""));
+    if (out.status !== 200) {
+      const m = mapEngineError(out.status, out.json);
+      res.status(m.status).json(m.body);
+      return;
+    }
+    res.json(out.json);
+  });
+
   // USDC contract per network, used in the discovery document.
   const USDC_BY_NETWORK: Record<string, string> = {
     "eip155:8453": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -402,6 +623,8 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
       item("/report", config.reportPrice, "Enriched crypto risk report, a weighted factor breakdown plus a written analysis and a confidence label."),
       item("/derivatives", config.derivativesPrice, "Perp derivatives leverage/squeeze signal, funding, open interest and 24h change, long/short crowding, basis, and a 0 to 100 leverage heat score with a bias call."),
       item("/whale", config.whalePrice, "Whale intelligence for any EVM wallet, total USD size, tier, 0 to 100 whale score, 24h netflow and largest move, activity flags, Base and Ethereum."),
+      item("/scan", config.scanPrice, "Smart contract quick scan, a risk score, a verdict and up to five findings with a file and a line, on six EVM chains."),
+      item("/audit", config.auditPrice, "Full smart contract audit, six focused lenses plus an adversarial pass that tries to refute every finding, with exploit scenarios, a table of what the owner can do, and a signed report."),
     ],
   };
   app.get("/.well-known/x402", (_req, res) => res.json(discovery));
@@ -433,6 +656,43 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
       },
     };
   }
+  // The audit routes take an address and a chain rather than an asset, so they
+  // need their own operation shape. Same x-x402 block so x402scan reads the price.
+  function auditOperation(price: string, summary: string, outSchema: Record<string, unknown>) {
+    return {
+      operationId: summary.replace(/\s+/g, "_").toLowerCase(),
+      summary,
+      parameters: [
+        {
+          name: "address",
+          in: "query",
+          required: true,
+          description: "Deployed contract address to audit",
+          schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" },
+        },
+        {
+          name: "chain",
+          in: "query",
+          required: false,
+          description: `Chain, one of ${AUDIT_CHAINS.join(", ")}`,
+          schema: { type: "string", enum: [...AUDIT_CHAINS], default: "base" },
+        },
+      ],
+      responses: {
+        "200": { description: summary, content: { "application/json": { schema: outSchema } } },
+        "400": { description: "Bad address or unsupported chain, nothing is charged" },
+        "402": { description: "Payment required, pay per call in USDC over x402" },
+        "422": { description: "Source is not verified or does not compile, nothing is charged" },
+        "503": { description: "The audit engine or the explorer is unavailable, nothing is charged" },
+      },
+      "x-x402": {
+        accepts: [
+          { scheme: "exact", network, maxAmountRequired: priceToAmount(price), asset: usdc, payTo, extra: { name: "USD Coin", version: "2" } },
+        ],
+      },
+    };
+  }
+
   const openapi = {
     openapi: "3.1.0",
     info: {
@@ -477,6 +737,8 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           },
         },
       },
+      "/scan": { get: auditOperation(config.scanPrice, "Smart contract quick scan", SCAN_OUTPUT.schema) },
+      "/audit": { get: auditOperation(config.auditPrice, "Smart contract full audit", AUDIT_OUTPUT.schema) },
     },
   };
   app.get("/openapi.json", (_req, res) => res.json(openapi));
@@ -509,6 +771,8 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
         { resource: "/report", price: config.reportPrice, description: "Factor breakdown plus written analysis and confidence." },
         { resource: "/derivatives", price: config.derivativesPrice, description: "Perp leverage/squeeze signal: funding, OI, crowding, basis, 0-100 heat, bias." },
         { resource: "/whale", price: config.whalePrice, description: "Whale wallet score: USD size, tier, 24h netflow, flags. Base and Ethereum." },
+        { resource: "/scan", price: config.scanPrice, description: "Contract quick scan: risk score, verdict, up to five findings with a file and a line. Six EVM chains." },
+        { resource: "/audit", price: config.auditPrice, description: "Full contract audit: six lenses plus a refutation pass, exploit scenarios, owner powers table, signed report page." },
       ],
     });
   });
@@ -541,6 +805,10 @@ table{width:100%;border-collapse:collapse;margin:10px 0} td,th{border:1px solid 
 <tr><td><code>GET ${base}/report</code></td><td class="price">${reportPrice}</td><td>Weighted factor breakdown, written analysis, confidence label.</td></tr>
 <tr><td><code>GET ${base}/derivatives</code></td><td class="price">${config.derivativesPrice}</td><td>Perp leverage/squeeze signal: funding, open interest, crowding, basis, 0-100 heat, bias call.</td></tr>
 <tr><td><code>GET ${base}/whale?address=0x...</code></td><td class="price">${config.whalePrice}</td><td>Whale wallet score: USD size, tier, 0-100 score, 24h netflow, largest move, flags. Base and Ethereum.</td></tr>
+<tr><td><code>GET ${base}/scan?address=0x...&amp;chain=base</code></td><td class="price">${config.scanPrice}</td><td>Contract quick scan: risk score, verdict and up to five findings, each with a file and a line. Six EVM chains.</td></tr>
+<tr><td><code>GET ${base}/audit?address=0x...&amp;chain=base</code></td><td class="price">${config.auditPrice}</td><td>Full audit: six lenses plus an adversarial refutation pass. Returns a job id, then a signed report page.</td></tr>
+<tr><td><code>POST ${base}/audit</code></td><td class="price">${config.auditPrice}</td><td>The same full audit for Solidity pasted in the body as <code>{"source": "contract ..."}</code>, for code that is not deployed.</td></tr>
+<tr><td><code>GET ${base}/audit/status?job=...</code></td><td class="price">free</td><td>Progress and the finished report for a job you already paid for.</td></tr>
 </table>
 <p class="muted">Network ${network}, asset USDC. Payments settle on chain.</p>
 <h2>Pay with an x402 client</h2>
