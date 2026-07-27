@@ -38,6 +38,18 @@ if (payResp) {
     console.log("payment-response header", payResp);
   }
 }
+// How the facilitator handled the bazaar discovery info it was handed: success, or
+// processing while it catalogs, or rejected with a reason. The only place that answer
+// shows up, and the difference between "listed soon" and "never listed".
+const ext = res.headers.get("extension-responses");
+if (ext) {
+  try {
+    console.log("extensions", JSON.stringify(JSON.parse(Buffer.from(ext, "base64").toString("utf8"))));
+  } catch {
+    console.log("extensions raw", ext);
+  }
+}
+
 const body = await res.text();
 // Truncated by default so a signal fits one screen; BUY_FULL=1 when the answer is a list
 // you actually need to read, such as an x402scan registry page.
