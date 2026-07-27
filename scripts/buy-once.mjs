@@ -39,4 +39,6 @@ if (payResp) {
   }
 }
 const body = await res.text();
-console.log("body", body.slice(0, 600));
+// Truncated by default so a signal fits one screen; BUY_FULL=1 when the answer is a list
+// you actually need to read, such as an x402scan registry page.
+console.log("body", process.env.BUY_FULL === "1" ? body : body.slice(0, 600));
