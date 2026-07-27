@@ -85,6 +85,10 @@ export const config = {
   sellerPort: n(process.env.SELLER_PORT, 4055),
   sellerPublicUrl: process.env.SELLER_PUBLIC_URL ?? "https://api.tradeperpetua.xyz",
   contactEmail: process.env.CONTACT_EMAIL ?? "",
+  // 402index proves domain ownership by asking for a hash it issued to be served from
+  // our own host. Env driven so the claim is not baked into the repo, and unset simply
+  // means the route is not there.
+  index402VerifyHash: process.env.INDEX402_VERIFY_HASH ?? "",
   // Block to start scanning seller income from, near the mainnet launch, keeps the scan cheap.
   incomeStartBlock: process.env.INCOME_START_BLOCK ?? "47850000",
   // Base MAINNET rpc for the income scan, distinct from baseRpc which may point at testnet

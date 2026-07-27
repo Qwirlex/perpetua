@@ -669,6 +669,15 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
   app.get("/.well-known/x402", (_req, res) => res.json(discovery));
   app.get("/discovery", (_req, res) => res.json(discovery));
 
+  // 402index domain ownership proof. Their listings sit in "pending review" forever
+  // otherwise; serving the hash they issued flips the whole domain to approved and
+  // grants edit rights over our own entries.
+  if (config.index402VerifyHash) {
+    app.get("/.well-known/402index-verify.txt", (_req, res) =>
+      res.type("text/plain").send(config.index402VerifyHash),
+    );
+  }
+
   // OpenAPI spec. x402scan reads this to learn the input schema and the 402 payment
   // info, which is how it registers a resource. Facilitator independent.
   function operation(price: string, summary: string, outSchema: Record<string, unknown>, assetEnum: string[] = config.assets) {
