@@ -53,11 +53,12 @@ export function computeWhaleSignal(raw: WalletRaw): WhaleSignal {
   if (netflow !== null && totalUsd > 0 && netflow > totalUsd * 0.005 && netflow > 1000) flags.push("accumulating");
   if (netflow !== null && totalUsd > 0 && -netflow > totalUsd * 0.005 && -netflow > 1000) flags.push("distributing");
 
-  // Confidence drops as optional data sources go missing.
+  // Confidence drops as optional data sources go missing. A balance that came from the
+  // indexer rather than the chain counts as missing, it can be days behind.
   const missing =
     (raw.nativeUsd === null ? 1 : 0) +
     (raw.txCount === null ? 1 : 0) +
-    (raw.holdings.length === 0 && tokenUsd === 0 ? 0 : 0) +
+    (raw.balanceSource === "indexer" ? 1 : 0) +
     (raw.recentTransfers.length === 0 ? 1 : 0);
   const confidence: WhaleSignal["confidence"] = missing === 0 ? "high" : missing === 1 ? "medium" : "low";
 
@@ -85,6 +86,7 @@ export function computeWhaleSignal(raw: WalletRaw): WhaleSignal {
     largestMoveUsd24h: largest !== null ? round2(largest) : null,
     activeLast24h,
     flags,
+    balanceSource: raw.balanceSource,
     confidence,
     rationale,
     ts: raw.ts,

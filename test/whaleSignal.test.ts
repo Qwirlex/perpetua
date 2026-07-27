@@ -20,6 +20,7 @@ const base: WalletRaw = {
     { ts: TS - 7200, direction: "out", usd: 3680, symbol: "WETH", counterpartyContract: false },
     { ts: TS - 200_000, direction: "out", usd: 9_999_999, symbol: "USDC", counterpartyContract: false },
   ],
+  balanceSource: "chain",
   ts: TS,
 };
 
@@ -80,6 +81,13 @@ describe("computeWhaleSignal", () => {
     expect(m.confidence).toBe("medium");
     const h = computeWhaleSignal(base);
     expect(h.confidence).toBe("high");
+  });
+
+  it("a balance that fell back to the indexer is passed through and costs confidence", () => {
+    const s = computeWhaleSignal({ ...base, balanceSource: "indexer" });
+    expect(s.balanceSource).toBe("indexer");
+    expect(s.confidence).toBe("medium");
+    expect(computeWhaleSignal(base).balanceSource).toBe("chain");
   });
 
   it("contract wallets are flagged and named in the rationale", () => {

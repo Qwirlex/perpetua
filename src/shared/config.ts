@@ -90,6 +90,10 @@ export const config = {
   // Base MAINNET rpc for the income scan, distinct from baseRpc which may point at testnet
   // for the demo loop. Empty uses viem's default Base mainnet endpoint.
   incomeRpc: process.env.INCOME_RPC_URL ?? "",
+  // The /whale endpoint reads wallet balances straight from the chain, because the
+  // Blockscout balance cache lags by days. Empty uses viem's default for that chain.
+  walletBaseRpc: process.env.WALLET_BASE_RPC ?? process.env.INCOME_RPC_URL ?? "",
+  walletEthRpc: process.env.WALLET_ETH_RPC ?? "https://ethereum-rpc.publicnode.com",
   coingeckoUrl:
     process.env.COINGECKO_URL ??
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum",

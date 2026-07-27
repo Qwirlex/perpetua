@@ -1,8 +1,12 @@
 import type { WalletRaw } from "../shared/types.js";
+import { fetchChainBalances, type OnchainBalances } from "./chainBalances.js";
 
 // Wallet intelligence source for the /whale endpoint. Blockscout v2 is open with no
 // key and reachable from the VPS (unlike Binance/Bybit, see derivsSource). One host
 // per supported chain; native coin is 18 decimals on both.
+//
+// Blockscout is the discovery and pricing source only. Its cached balances lag by days,
+// so the numbers a buyer pays for come from the chain, see chainBalances.
 export const WALLET_CHAINS: Record<string, string> = {
   base: "https://base.blockscout.com",
   ethereum: "https://eth.blockscout.com",
@@ -10,12 +14,17 @@ export const WALLET_CHAINS: Record<string, string> = {
 
 export const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
+// Below this a holding is airdrop noise, not wallet size. Kept low because the
+// reputation filter and the chain read already do the heavy lifting.
+const MIN_HOLDING_USD = 0.1;
+
 const num = (x: unknown): number | null => {
   const n = typeof x === "string" ? parseFloat(x) : typeof x === "number" ? x : NaN;
   return Number.isFinite(n) ? n : null;
 };
 
 interface TokenInfo {
+  address_hash?: unknown;
   decimals?: unknown;
   exchange_rate?: unknown;
   symbol?: unknown;
@@ -43,17 +52,65 @@ function tokenUsd(value: unknown, token: TokenInfo | undefined): number | null {
   return (raw / 10 ** dec) * rate;
 }
 
-// Pure normalizer: raw Blockscout JSON pieces -> WalletRaw.
-export function parseWalletRaw(address: string, chain: string, p: WalletParts, ts: number): WalletRaw {
+// Every ERC-20 the indexer has seen for this address, whether it reported a current
+// balance or only a transfer. The cached balances go stale, the transfer feed does not,
+// so the union is the candidate set the chain gets asked about.
+//
+// Order is the priority order for the chain read, which is capped. Recently transferred
+// tokens come first because those are exactly the ones whose cached balance is most
+// likely wrong; the balance list follows, and Blockscout returns it largest first.
+export function tokenCatalog(p: WalletParts): Map<string, TokenInfo> {
+  const out = new Map<string, TokenInfo>();
+  const add = (t?: TokenInfo) => {
+    const addr = String(t?.address_hash ?? "").toLowerCase();
+    if (!t || !ADDRESS_RE.test(addr) || out.has(addr)) return;
+    out.set(addr, t);
+  };
+  for (const t of p.tokenTransfers ?? []) add(t.token);
+  for (const b of p.tokenBalances ?? []) add(b.token);
+  return out;
+}
+
+// Scam and unpriced tokens are excluded either way so a dust airdrop cannot inflate the
+// wallet size. The only difference is where the balance came from.
+const priced = (rows: { symbol: string; usd: number | null }[]) =>
+  rows
+    .filter((h): h is { symbol: string; usd: number } => h.usd !== null && h.usd >= MIN_HOLDING_USD)
+    .sort((a, b) => b.usd - a.usd);
+
+function holdingsFromChain(catalog: Map<string, TokenInfo>, onchain: OnchainBalances) {
+  return priced(
+    [...catalog]
+      .filter(([, token]) => token.reputation === "ok")
+      .map(([addr, token]) => ({
+        symbol: String(token.symbol ?? "?"),
+        usd: tokenUsd((onchain.tokens.get(addr) ?? 0n).toString(), token),
+      })),
+  );
+}
+
+function holdingsFromIndexer(p: WalletParts) {
+  return priced(
+    (p.tokenBalances ?? [])
+      .filter((b) => b.token?.reputation === "ok")
+      .map((b) => ({ symbol: String(b.token?.symbol ?? "?"), usd: tokenUsd(b.value, b.token) })),
+  );
+}
+
+// Pure normalizer: raw Blockscout JSON pieces -> WalletRaw. Pass onchain to price the
+// holdings off real balances; without it the indexer's cached ones ship, labelled.
+export function parseWalletRaw(
+  address: string,
+  chain: string,
+  p: WalletParts,
+  ts: number,
+  onchain?: OnchainBalances,
+): WalletRaw {
   const addr = address.toLowerCase();
-  const nativeBalance = (num(p.info?.coin_balance) ?? 0) / 1e18;
+  const nativeBalance = onchain ? Number(onchain.nativeWei) / 1e18 : (num(p.info?.coin_balance) ?? 0) / 1e18;
   const nativeRate = num(p.info?.exchange_rate);
 
-  const holdings = (p.tokenBalances ?? [])
-    .filter((b) => b.token?.reputation === "ok")
-    .map((b) => ({ symbol: String(b.token?.symbol ?? "?"), usd: tokenUsd(b.value, b.token) }))
-    .filter((h): h is { symbol: string; usd: number } => h.usd !== null && h.usd >= 1)
-    .sort((a, b) => b.usd - a.usd);
+  const holdings = onchain ? holdingsFromChain(tokenCatalog(p), onchain) : holdingsFromIndexer(p);
 
   const recentTransfers = (p.tokenTransfers ?? [])
     .map((t) => {
@@ -81,6 +138,7 @@ export function parseWalletRaw(address: string, chain: string, p: WalletParts, t
     tokenTransfersCount: p.counters ? num(p.counters.token_transfers_count) : null,
     holdings,
     recentTransfers,
+    balanceSource: onchain ? "chain" : "indexer",
     ts,
   };
 }
@@ -98,8 +156,9 @@ async function tryJson(url: string): Promise<any | undefined> {
   }
 }
 
-// Adapter: fetch all pieces for an address and normalize. The address info is core
-// (throws on failure); counters, balances and transfers degrade to null/empty.
+// Adapter: fetch all pieces for an address, verify the balances against the chain, and
+// normalize. The address info is core (throws on failure); counters, balances, transfers
+// and the chain read degrade to null/empty/indexer numbers.
 export async function fetchWalletRaw(address: string, chain: string, ts: number): Promise<WalletRaw> {
   const host = WALLET_CHAINS[chain];
   if (!host) throw new Error(`unsupported chain ${chain}`);
@@ -110,15 +169,12 @@ export async function fetchWalletRaw(address: string, chain: string, ts: number)
     tryJson(`${base}/token-balances`),
     tryJson(`${base}/token-transfers?type=ERC-20`),
   ]);
-  return parseWalletRaw(
-    address,
-    chain,
-    {
-      info,
-      counters,
-      tokenBalances: Array.isArray(tokenBalances) ? tokenBalances : tokenBalances?.items,
-      tokenTransfers: transfers?.items,
-    },
-    ts,
-  );
+  const parts: WalletParts = {
+    info,
+    counters,
+    tokenBalances: Array.isArray(tokenBalances) ? tokenBalances : tokenBalances?.items,
+    tokenTransfers: transfers?.items,
+  };
+  const onchain = await fetchChainBalances(chain, address, [...tokenCatalog(parts).keys()]);
+  return parseWalletRaw(address, chain, parts, ts, onchain ?? undefined);
 }

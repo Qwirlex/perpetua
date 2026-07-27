@@ -112,6 +112,9 @@ export interface WalletRaw {
     symbol: string;
     counterpartyContract: boolean;
   }[];
+  // Where the balances came from. "chain" is a live read, "indexer" means the chain read
+  // failed and Blockscout's cached balances shipped instead, which can lag by days.
+  balanceSource: "chain" | "indexer";
   ts: number;
 }
 
@@ -135,6 +138,7 @@ export interface WhaleSignal {
   largestMoveUsd24h: number | null;
   activeLast24h: boolean;
   flags: string[];
+  balanceSource: "chain" | "indexer";
   confidence: "low" | "medium" | "high";
   rationale: string;
   ts: number;

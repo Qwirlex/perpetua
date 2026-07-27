@@ -144,7 +144,8 @@ const WHALE_OUTPUT = {
     topHoldings: [{ symbol: "USDC", usd: 2500000 }], tier: "humpback", whaleScore: 92,
     txCount: 667, tokenTransfersCount: 37281929,
     inflowUsd24h: 1200000, outflowUsd24h: 3680, netflowUsd24h: 1196320, largestMoveUsd24h: 1200000,
-    activeLast24h: true, flags: ["high_velocity", "accumulating"], confidence: "high",
+    activeLast24h: true, flags: ["high_velocity", "accumulating"],
+    balanceSource: "chain", confidence: "high",
     rationale: "Humpback wallet ($57.7M) on base, 667 txs, 24h netflow $1.2M over 2 moves, largest $1.2M. Accumulating.",
   },
   schema: {
@@ -159,6 +160,10 @@ const WHALE_OUTPUT = {
       inflowUsd24h: { type: "number" }, outflowUsd24h: { type: "number" },
       netflowUsd24h: { type: "number" }, largestMoveUsd24h: { type: "number" },
       activeLast24h: { type: "boolean" }, flags: { type: "array" },
+      balanceSource: {
+        type: "string", enum: ["chain", "indexer"],
+        description: "chain means balances were read live on-chain, indexer means a cached fallback",
+      },
       confidence: { type: "string", enum: ["low", "medium", "high"] },
       rationale: { type: "string" },
     },
