@@ -215,6 +215,24 @@ const AUDIT_INPUT_SCHEMA = {
   required: ["address"],
 };
 
+// The pasted source form of both audit tiers. Discovery treats GET /scan and POST /scan
+// as the same resource url, so the body form needs its own declared schema or a probing
+// directory sees a paid endpoint with no input contract and refuses to list it.
+const PASTE_INPUT_SCHEMA = {
+  properties: {
+    source: {
+      type: "string",
+      minLength: 40,
+      description: "Solidity source to audit, flattened, for code that is not deployed or not verified",
+    },
+  },
+  required: ["source"],
+};
+
+const PASTE_INPUT_EXAMPLE = {
+  source: "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\ncontract Vault { address public owner; }",
+};
+
 const SCAN_OUTPUT = {
   example: {
     tier: "scan", verdict: "caution", risk_score: 20, confidence: "medium",
@@ -422,6 +440,14 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           description:
             "Fast security verdict for Solidity source pasted in the body, for code that is not deployed or not verified. Same output as the address form. Nothing is charged when the source does not compile.",
           tags: AUDIT_TAGS,
+          extensions: {
+            ...declareDiscoveryExtension({
+              bodyType: "json",
+              input: PASTE_INPUT_EXAMPLE,
+              inputSchema: PASTE_INPUT_SCHEMA,
+              output: SCAN_OUTPUT,
+            }),
+          },
         },
         "POST /audit": {
           accepts: { scheme: "exact", price: config.auditPrice, network, payTo },
@@ -429,6 +455,14 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           description:
             "Full six lens audit with the adversarial refutation pass for Solidity source pasted in the body. Returns a job id at once and a signed report. Nothing is charged when the source does not compile.",
           tags: AUDIT_TAGS,
+          extensions: {
+            ...declareDiscoveryExtension({
+              bodyType: "json",
+              input: PASTE_INPUT_EXAMPLE,
+              inputSchema: PASTE_INPUT_SCHEMA,
+              output: AUDIT_OUTPUT,
+            }),
+          },
         },
       },
       resourceServer,
@@ -698,6 +732,45 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
     };
   }
 
+  // The pasted source form of the same two tiers. A directory that probes the resource
+  // url can land on the body route, so it needs a declared requestBody of its own.
+  function pasteOperation(price: string, summary: string, outSchema: Record<string, unknown>) {
+    return {
+      operationId: `${summary.replace(/\s+/g, "_").toLowerCase()}_pasted_source`,
+      summary: `${summary}, pasted source`,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                source: {
+                  type: "string",
+                  minLength: 40,
+                  description: "Solidity source to audit, flattened",
+                },
+              },
+              required: ["source"],
+            },
+          },
+        },
+      },
+      responses: {
+        "200": { description: summary, content: { "application/json": { schema: outSchema } } },
+        "400": { description: "Source is missing or too short to be a contract, nothing is charged" },
+        "402": { description: "Payment required, pay per call in USDC over x402" },
+        "422": { description: "Source does not compile, nothing is charged" },
+        "503": { description: "The audit engine is unavailable, nothing is charged" },
+      },
+      "x-x402": {
+        accepts: [
+          { scheme: "exact", network, maxAmountRequired: priceToAmount(price), asset: usdc, payTo, extra: { name: "USD Coin", version: "2" } },
+        ],
+      },
+    };
+  }
+
   const openapi = {
     openapi: "3.1.0",
     info: {
@@ -742,8 +815,14 @@ export async function createSellerApp(payTo: string, latest: LatestState) {
           },
         },
       },
-      "/scan": { get: auditOperation(config.scanPrice, "Smart contract quick scan", SCAN_OUTPUT.schema) },
-      "/audit": { get: auditOperation(config.auditPrice, "Smart contract full audit", AUDIT_OUTPUT.schema) },
+      "/scan": {
+        get: auditOperation(config.scanPrice, "Smart contract quick scan", SCAN_OUTPUT.schema),
+        post: pasteOperation(config.scanPrice, "Smart contract quick scan", SCAN_OUTPUT.schema),
+      },
+      "/audit": {
+        get: auditOperation(config.auditPrice, "Smart contract full audit", AUDIT_OUTPUT.schema),
+        post: pasteOperation(config.auditPrice, "Smart contract full audit", AUDIT_OUTPUT.schema),
+      },
     },
   };
   app.get("/openapi.json", (_req, res) => res.json(openapi));
